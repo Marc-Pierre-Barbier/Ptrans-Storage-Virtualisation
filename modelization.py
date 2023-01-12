@@ -83,7 +83,7 @@ class Proposal:
 
 
 class Problem:
-    def __init__(self, storages: list[Storage], objects: list[Object], proposals: dict[Object, Proposal]) -> None:
+    def __init__(self, storages: list[Storage], objects: list[Object], proposals: dict[Object, list[Proposal]]) -> None:
         self._storages = storages
         self._objects = objects
         self._proposals = proposals
@@ -94,5 +94,5 @@ class Problem:
     def get_objects(self) -> list[Object]:
         return self._objects
 
-    def get_proposals(self) -> dict[Object, Proposal]:
+    def get_proposals(self) -> dict[Object, list[Proposal]]:
         return self._proposals
