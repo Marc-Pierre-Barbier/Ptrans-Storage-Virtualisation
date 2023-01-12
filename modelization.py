@@ -47,10 +47,10 @@ class Storage:
     def get_resources_current(self) -> ResourceValues:
         return self._resources_current
 
-    def set_is_working(self, working: bool) -> bool:
+    def set_is_working(self, working: bool) -> None:
         self._is_working = working
 
-    def set_resources_current(self, resources_current: ResourceValues) -> ResourceValues:
+    def set_resources_current(self, resources_current: ResourceValues) -> None:
         self._resources_current = resources_current
 
 
