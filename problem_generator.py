@@ -1,5 +1,5 @@
 from typing import List
-from modelization import Problem, Storage, Proposal, ResourceValues
+from modelizations import Problem, Storage, Proposal, ResourceValues
 import random
 
 def generate_problem(serverCount: int, proposalsCount: int) -> Problem:

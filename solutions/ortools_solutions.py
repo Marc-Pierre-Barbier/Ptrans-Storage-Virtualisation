@@ -1,6 +1,7 @@
-from modelization import *
+from modelizations import *
 
 from ortools.algorithms import pywrapknapsack_solver
+
 
 class ORTools:
     """La classe qui concatène les infos précédents pour en faire un truc OR-Tools friendly"""
@@ -9,7 +10,9 @@ class ORTools:
         self.problem = problem
 
     def simple_knapsack_solution(self):
-        """Solution un peu bête qui consiste à regarder stockage après stockage les objets qu'on va mettre dedans avec un solveur. On suppose ici que object.get_locations() ne renvoie qu'un élément à chaque fois (et que des déplacements on le rappelle !)."""
+        """Solution un peu bête qui consiste à regarder stockage après stockage les objets qu'on va mettre dedans
+        avec un solveur. On suppose ici que object.get_locations() ne renvoie qu'un élément à chaque fois (et que des
+        déplacements on le rappelle !). """
 
         raw_storages = self.problem.get_storages()  # à trier ?
         proposals = self.problem.get_proposals()
@@ -28,15 +31,20 @@ class ORTools:
                         resource_values_object: ResourceValues = proposal.get_proposed_object().get_resources_values()
 
                         weight = resource_values_object.get_capacity()
-                        value = resource_values_object.get_read_bandwidth() + resource_values_object.get_read_ops() + resource_values_object.get_write_bandwidth() + resource_values_object.get_write_ops()
+                        value = resource_values_object.get_read_bandwidth() + resource_values_object.get_read_ops() + \
+                            resource_values_object.get_write_bandwidth() + resource_values_object.get_write_ops()
 
                         candidates_objects[(value, weight)] = proposal.get_proposed_object()
                         values.append(value)
                         weights[0].append(weight)
 
-            capacities: list[int] = [storage_considered.get_resources_limits().get_capacity() - storage_considered.get_resources_current().get_capacity()]
+            capacities: list[int] = [
+                storage_considered.get_resources_limits().get_capacity() -
+                storage_considered.get_resources_current().get_capacity()
+            ]
 
-            solver = pywrapknapsack_solver.KnapsackSolver(pywrapknapsack_solver.KnapsackSolver.KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER, 'Knapsack')
+            solver = pywrapknapsack_solver.KnapsackSolver(
+                pywrapknapsack_solver.KnapsackSolver.KNAPSACK_MULTIDIMENSION_BRANCH_AND_BOUND_SOLVER, 'Knapsack')
 
             solver.Init(values, weights, capacities)
             solver.Solve()
@@ -58,4 +66,4 @@ class ORTools:
                     if proposal.get_proposed_object().get_locations()[0] == storage_considered:
                         proposals_kept.append(proposal)
 
-            return (proposals_kept, proposals)  # propositions gardées et propositions encore possibles
+            return proposals_kept, proposals  # propositions gardées et propositions encore possibles
