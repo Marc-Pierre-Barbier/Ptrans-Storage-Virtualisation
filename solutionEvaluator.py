@@ -14,9 +14,10 @@ def absolute_deviation(list: list[float]) -> float:
     return dev
 
 
-def entropy(list: list[float]) -> float:
-    _, counts = np.unique(list, return_counts=True)
-    probs = counts / len(list)
+def entropy(data: list[float]) -> float:
+    data = list(map(lambda a: round(a, 2), data))
+    _, counts = np.unique(data, return_counts=True)
+    probs = counts / len(data)
     n_classes = np.count_nonzero(probs)
 
     if n_classes <= 1:
@@ -26,7 +27,7 @@ def entropy(list: list[float]) -> float:
 
     # Compute entropy
     for i in probs:
-        ent -= 100 * i * i * log(i, 2)
+        ent -= 100 * i * log(i, 2)
 
     return ent
 
