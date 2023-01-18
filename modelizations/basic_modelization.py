@@ -31,6 +31,9 @@ class ResourceValues:
     def get_write_bandwidth(self) -> int:
         return self._write_bandwidth
 
+    def __mul__(self, other: float):
+        return ResourceValues(self._capacity * other, self._read_ops * other, self._capacity * other, self._write_ops * other, self._write_bandwidth * other)
+
 
 class Storage:
     def __init__(self, is_working: bool, resources_limits: ResourceValues, resources_current: ResourceValues) -> None:
