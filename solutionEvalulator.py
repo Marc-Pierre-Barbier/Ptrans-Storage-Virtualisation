@@ -1,6 +1,6 @@
 from math import log
 import numpy as np
-from modelization import Problem, ResourceValues, Storage
+from modelizations.basic_modelization import Problem, ResourceValues, Storage
 from problem_generator import generate_problem
 
 # TODO: ici on ne regarde que l'étant du stockage il faut donc une fonction qui prends les proposition retenu et qui extrait le stockage aprés transformation

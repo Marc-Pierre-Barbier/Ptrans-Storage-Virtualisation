@@ -1,6 +1,6 @@
 import copy
 from typing import List
-from modelization import Problem, Storage, Proposal, ResourceValues, Object
+from modelizations.basic_modelization import Problem, Storage, Proposal, ResourceValues, Object
 import random
 
 # TODO: pour des raison évidente on peut pas finir sa
