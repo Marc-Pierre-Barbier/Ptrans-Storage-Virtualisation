@@ -31,8 +31,24 @@ class ResourceValues:
     def get_write_bandwidth(self) -> int:
         return self._write_bandwidth
 
+    def __str__(self) -> str:
+        return "capacity: " + str(self._capacity) + \
+            "\nRops: " + str(self._read_ops) + \
+            "\nRband: " + str(self._read_bandwidth) + \
+            "\nWops: " + str(self._write_ops) + \
+            "\nWband: " + str(self._write_bandwidth)
+
+    def __add__(self, other):
+        return ResourceValues(self._capacity + other._capacity, self._read_ops + other._read_ops, self._read_bandwidth + other._read_bandwidth, self._write_ops + other._write_ops, self._write_bandwidth + other._write_bandwidth)
+
+    def __sub__(self, other):
+        return ResourceValues(self._capacity - other._capacity, self._read_ops - other._read_ops, self._read_bandwidth - other._read_bandwidth, self._write_ops - other._write_ops, self._write_bandwidth - other._write_bandwidth)
+
     def __mul__(self, other: float):
         return ResourceValues(self._capacity * other, self._read_ops * other, self._capacity * other, self._write_ops * other, self._write_bandwidth * other)
+
+    def __truediv__(self, other):
+        return ResourceValues(self._capacity / other._capacity, self._read_ops / other._read_ops, self._read_bandwidth / other._read_bandwidth, self._write_ops / other._write_ops, self._write_bandwidth / other._write_bandwidth)
 
 
 class Storage:

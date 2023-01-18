@@ -1,4 +1,4 @@
-from copy import copy
+import copy
 from typing import List
 from modelization import Problem, Storage, Proposal, ResourceValues, Object
 import random
@@ -18,6 +18,10 @@ def generate_ressources_from_storages(storages: list[Storage]) -> ResourceValues
 def generate_problem(server_count: int, usage: int, proposals_count: int) -> Problem:
     storages: List[Storage] = []
     proposals: List[Proposal] = []
+    objects: List[Object] = []
+    usage /= 100.0
+
+    print("Generating servers")
 
     for _ in range(server_count):
         limit = ResourceValues(
@@ -27,8 +31,8 @@ def generate_problem(server_count: int, usage: int, proposals_count: int) -> Pro
             random.randint(100, 10000),
             random.randint(1, 100)
         )
-        current = copy(limit)
-        usage /= 100
+        current = copy.copy(limit)
+
         current._capacity *= usage
         current._read_ops *= usage
         current._capacity *= usage
@@ -37,27 +41,40 @@ def generate_problem(server_count: int, usage: int, proposals_count: int) -> Pro
         current._write_ops *= usage
         storages.append(Storage(False, current, limit))
 
-    for _ in range(proposals_count):
-        original_storages: List[Storage] = []
-        new_storages: List[Storage] = []
+    print("Generating objects")
 
-        while len(original_storages) != SPEAD:
-            storage_id = random.randint(0, len(storages) - 1)
-            if storages[storage_id] not in original_storages:
-                original_storages.append(storages[storage_id])
+    # TODO: multiple storages / object
+    for storage in storages:
+        total = copy.copy(storage.get_resources_current())
+
+        while total.get_capacity() > 0:
+            ressources = storage.get_resources_limits() * (random.randint(30, 60) / 100)
+            if(ressources.get_capacity() > total.get_capacity()):
+                objects.append(Object([storage], total))
+                break
+            total -= ressources
+            objects.append(Object([storage], ressources))
+
+    print("Generating proposals")
+
+    for _ in range(proposals_count):
+        current_object = objects[random.randint(0, len(objects) - 1)]
+        new_storages: List[Storage] = []
 
         while len(new_storages) != SPEAD:
             storage_id = random.randint(0, len(storages) - 1)
             if storages[storage_id] not in new_storages:
                 new_storages.append(storages[storage_id])
 
-        values = generate_ressources_from_storages(original_storages)
+        values = generate_ressources_from_storages(current_object.get_locations())
 
-        original_object = Object(original_storages, values)
+        original_object = Object(current_object.get_locations(), values)
         new_object = Object(new_storages, values)
 
         proposals.append(Proposal(
             original_object, new_object, 2
         ))
 
-    return Problem(storages, proposals)
+    print("Generation done")
+
+    return Problem(storages, objects, proposals)
