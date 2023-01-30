@@ -38,16 +38,16 @@ class ResourceValues:
             "\nWops: " + str(self._write_ops) + \
             "\nWband: " + str(self._write_bandwidth)
 
-    def __add__(self, other):
+    def __add__(self, other: 'ResourceValues'):
         return ResourceValues(self._capacity + other._capacity, self._read_ops + other._read_ops, self._read_bandwidth + other._read_bandwidth, self._write_ops + other._write_ops, self._write_bandwidth + other._write_bandwidth)
 
-    def __sub__(self, other):
+    def __sub__(self, other: 'ResourceValues'):
         return ResourceValues(self._capacity - other._capacity, self._read_ops - other._read_ops, self._read_bandwidth - other._read_bandwidth, self._write_ops - other._write_ops, self._write_bandwidth - other._write_bandwidth)
 
     def __mul__(self, other: float):
         return ResourceValues(self._capacity * other, self._read_ops * other, self._capacity * other, self._write_ops * other, self._write_bandwidth * other)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: 'ResourceValues'):
         return ResourceValues(self._capacity / other._capacity, self._read_ops / other._read_ops, self._read_bandwidth / other._read_bandwidth, self._write_ops / other._write_ops, self._write_bandwidth / other._write_bandwidth)
 
 

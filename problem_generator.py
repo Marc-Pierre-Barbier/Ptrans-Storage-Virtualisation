@@ -1,6 +1,6 @@
 import copy
-from typing import List
-from modelizations.basic_modelization import Problem, Storage, Proposal, ResourceValues, Object
+from typing import Dict, List
+from modelizations.basic_modelization import Problem, ProposalType, Storage, Proposal, ResourceValues, Object
 import random
 
 # TODO: pour des raison évidente on peut pas finir sa
@@ -15,9 +15,9 @@ def generate_ressources_from_storages(storages: list[Storage]) -> ResourceValues
 
 
 # usage from 0 to 100
-def generate_problem(server_count: int, usage: int, proposals_count: int) -> Problem:
+def generate_problem(server_count: int, usage: float, proposals_count: int) -> Problem:
     storages: List[Storage] = []
-    proposals: List[Proposal] = []
+    proposals: Dict[Object, List[Proposal]] = {}
     objects: List[Object] = []
     usage /= 100.0
 
@@ -31,15 +31,15 @@ def generate_problem(server_count: int, usage: int, proposals_count: int) -> Pro
             random.randint(100, 10000),
             random.randint(1, 100)
         )
-        current = copy.copy(limit)
+        current = ResourceValues(0, 0, 0, 0, 0)
 
-        current._capacity *= usage
-        current._read_ops *= usage
-        current._capacity *= usage
-        current._read_bandwidth *= usage
-        current._write_bandwidth *= usage
-        current._write_ops *= usage
-        storages.append(Storage(False, current, limit))
+        current._capacity = float(usage * limit.get_capacity())
+        current._read_ops = float(usage * limit.get_read_ops())
+        current._read_bandwidth = float(usage * limit.get_read_bandwidth())
+        current._write_bandwidth = float(usage * limit.get_write_bandwidth())
+        current._write_ops = float(usage * limit.get_write_ops())
+
+        storages.append(Storage(False, limit, current))
 
     print("Generating objects")
 
@@ -48,12 +48,12 @@ def generate_problem(server_count: int, usage: int, proposals_count: int) -> Pro
         total = copy.copy(storage.get_resources_current())
 
         while total.get_capacity() > 0:
-            ressources = storage.get_resources_limits() * (random.randint(30, 60) / 100)
+            ressources = storage.get_resources_current() * (random.randint(50, 100) / 1000.)
             if(ressources.get_capacity() > total.get_capacity()):
-                objects.append(Object([storage], total))
-                break
-            total -= ressources
+                ressources = total
+
             objects.append(Object([storage], ressources))
+            total -= ressources
 
     print("Generating proposals")
 
@@ -66,13 +66,10 @@ def generate_problem(server_count: int, usage: int, proposals_count: int) -> Pro
             if storages[storage_id] not in new_storages:
                 new_storages.append(storages[storage_id])
 
-        values = generate_ressources_from_storages(current_object.get_locations())
+        new_object = Object(new_storages, current_object.get_resources_values())
 
-        original_object = Object(current_object.get_locations(), values)
-        new_object = Object(new_storages, values)
-
-        proposals.append(Proposal(
-            original_object, new_object, 2
+        proposals[current_object].append(Proposal(
+            current_object, new_object, ProposalType.MOVE
         ))
 
     print("Generation done")
