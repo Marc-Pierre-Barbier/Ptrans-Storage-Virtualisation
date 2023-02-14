@@ -1,3 +1,4 @@
+import copy
 import datetime
 from math import isclose, log, sqrt
 import numpy as np
@@ -32,8 +33,6 @@ def moy_ecart_type(list: list[int]) -> tuple[float, float, float]:
         return (avg, 0, 0)
 
     var = avg_of_cubed - (avg * avg)
-
-    print(var)
 
     return (avg, var, sqrt(var))
 
@@ -109,24 +108,23 @@ def problem_stats(problem: Problem) -> None:
     # calcule de l'entropie
     capacities = list(map(get_capacity, ressources))
     r_capacities = moy_ecart_type(capacities)
-    print("CAPCACITE:   AVG=" + str(r_capacities[0]) + "  VAR=" + str(r_capacities[1]) + "  ECType=" + str(r_capacities[2]))
+    print("Capacite: AVG=%.4f VAR=%.4f ECType=%.4f" % (r_capacities[0], r_capacities[1], r_capacities[2]))
 
     w_iops = list(map(get_w_iops, ressources))
     r_w_iops = moy_ecart_type(w_iops)
-    print("W_IOPS:   AVG=" + str(r_w_iops[0]) + "  VAR=" + str(r_w_iops[1]) + "  ECType=" + str(r_w_iops[2]))
+    print("W_IOPS: AVG=%.4f VAR=%.4f ECType=%.4f" % (r_w_iops[0], r_w_iops[1], r_w_iops[2]))
 
     r_iops = list(map(get_r_iops, ressources))
     r_r_iops = moy_ecart_type(r_iops)
-    print("R_IOPS:   AVG=" + str(r_r_iops[0]) + "  VAR=" + str(r_r_iops[1]) + "  ECType=" + str(r_r_iops[2]))
+    print("R_IOPS: AVG=%.4f VAR=%.4f ECType=%.4f" % (r_r_iops[0], r_r_iops[1], r_r_iops[2]))
 
     w_bandwidth = list(map(get_w_bandwidth, ressources))
     r_w_bandwidth = moy_ecart_type(w_bandwidth)
-    print("R_IOPS:   AVG=" + str(r_w_bandwidth[0]) + "  VAR=" + str(r_w_bandwidth[1]) + "  ECType=" + str(r_w_bandwidth[2]))
+    print("W_Bandwidth: AVG=%.4f VAR=%.4f ECType=%.4f" % (r_w_bandwidth[0], r_w_bandwidth[1], r_w_bandwidth[2]))
 
     r_bandwidth = list(map(get_r_bandwidth, ressources))
     r_r_bandwidth = moy_ecart_type(r_bandwidth)
-    print("R_IOPS:   AVG=" + str(r_r_bandwidth[0]) + "  VAR=" + str(r_r_bandwidth[1]) + "  ECType=" + str(r_r_bandwidth[2]))
-
+    print("R_Bandwidth: AVG=%.4f VAR=%.4f ECType=%.4f" % (r_r_bandwidth[0], r_r_bandwidth[1], r_r_bandwidth[2]))
 
 def evaluate(problem: Problem):
     entropy = problem_entropy(problem)
@@ -137,6 +135,15 @@ def evaluate(problem: Problem):
 
 if __name__ == "__main__":
     time = datetime.datetime.now()
-    problem = generate_problem(1000, 20, 0)
+    problem = generate_problem(1000, 20, 200)
+
+    from glouton import glouton
+    glouton_problem = copy.deepcopy(problem)
+    glouton(glouton_problem)
+
+    print("Original problem")
     evaluate(problem)
+
+    print("\n\nAfter solution")
+    evaluate(glouton_problem)
     print("Time spend:" + str(datetime.datetime.now() - time))

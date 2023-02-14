@@ -17,7 +17,7 @@ def generate_ressources_from_storages(storages: list[Storage]) -> ResourceValues
 # usage from 0 to 100
 def generate_problem(server_count: int, usage: float, proposals_count: int) -> Problem:
     storages: List[Storage] = []
-    proposals: Dict[Object, List[Proposal]] = {}
+    proposals: Dict[int, List[Proposal]] = {}
     objects: List[Object] = []
     usage /= 100.0
 
@@ -58,7 +58,8 @@ def generate_problem(server_count: int, usage: float, proposals_count: int) -> P
     print("Generating proposals")
 
     for _ in range(proposals_count):
-        current_object = objects[random.randint(0, len(objects) - 1)]
+        object_index = random.randint(0, len(objects) - 1)
+        current_object = objects[object_index]
         new_storages: List[Storage] = []
 
         while len(new_storages) != SPEAD:
@@ -68,7 +69,9 @@ def generate_problem(server_count: int, usage: float, proposals_count: int) -> P
 
         new_object = Object(new_storages, current_object.get_resources_values())
 
-        proposals[current_object].append(Proposal(
+        if object_index not in proposals:
+            proposals[object_index] = []
+        proposals[object_index].append(Proposal(
             current_object, new_object, ProposalType.MOVE
         ))
 
