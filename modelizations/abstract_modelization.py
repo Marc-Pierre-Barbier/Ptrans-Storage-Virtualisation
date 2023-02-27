@@ -16,7 +16,7 @@ class Volume:
         return self._limits
 
     def get_efficiencies(self) -> list[int]:
-        return self._efficiencieszedoizedozipejdpodze
+        return self._efficiencies
 
     def get_resources_used(self) -> list[int]:
         return self._resources_used
