@@ -15,7 +15,7 @@ def generate_ressources_from_storages(storages: list[Storage]) -> ResourceValues
 
 
 # usage from 0 to 100
-def generate_problem(server_count: int, usage: float, proposals_count: int) -> Problem:
+def generate_problem(server_count: int, usage: float, usage_var: float, proposals_count: int) -> Problem:
     storages: List[Storage] = []
     proposals: Dict[int, List[Proposal]] = {}
     objects: List[Object] = []
@@ -33,11 +33,14 @@ def generate_problem(server_count: int, usage: float, proposals_count: int) -> P
         )
         current = ResourceValues(0, 0, 0, 0, 0)
 
-        current._capacity = float(usage * limit.get_capacity())
-        current._read_ops = float(usage * limit.get_read_ops())
-        current._read_bandwidth = float(usage * limit.get_read_bandwidth())
-        current._write_bandwidth = float(usage * limit.get_write_bandwidth())
-        current._write_ops = float(usage * limit.get_write_ops())
+        server_usage = random.randint(int(-usage_var * usage * 10000), int(usage_var * usage * 10000)) / 10000.0 + usage
+        server_usage = server_usage if server_usage < 100 and server_usage > 0 else usage
+
+        current._capacity = float(server_usage * limit.get_capacity())
+        current._read_ops = float(server_usage * limit.get_read_ops())
+        current._read_bandwidth = float(server_usage * limit.get_read_bandwidth())
+        current._write_bandwidth = float(server_usage * limit.get_write_bandwidth())
+        current._write_ops = float(server_usage * limit.get_write_ops())
 
         storages.append(Storage(False, limit, current))
 
