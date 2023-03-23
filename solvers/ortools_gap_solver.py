@@ -1,4 +1,4 @@
-from solver import Solver
+from solvers.solver import Solver
 from ortools.linear_solver import pywraplp
 
 

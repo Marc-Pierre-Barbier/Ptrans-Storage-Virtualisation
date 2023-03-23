@@ -4,7 +4,7 @@ from modelizations.abstract_modelization import *
 
 def basic_to_abstract_problem(basic_problem: Problem) -> ProblemInstance:
     volumes: dict[Storage, Volume] = {}
-    items = dict[Object, dict[Volume, Resources]] = {}
+    items: dict[Object, dict[Volume, Resources]] = {}
 
     for storage in basic_problem.get_storages():
         limits: list[int] = [
