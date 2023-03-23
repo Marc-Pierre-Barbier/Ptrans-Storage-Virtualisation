@@ -72,6 +72,13 @@ class Storage:
     def set_resources_current(self, resources_current: ResourceValues) -> None:
         self._resources_current = resources_current
 
+    def visualize(self):
+        print("Working: " + str(self._is_working))
+        print("Usage")
+        if self.get_resources_current().get_capacity() > 0:
+            print(self.get_resources_limits() / self.get_resources_current() * 100)
+        else:
+            print(self.get_resources_current())
 
 class Object:
     def __init__(self, locations: list[Storage], resource_values: ResourceValues) -> None:
@@ -83,6 +90,9 @@ class Object:
 
     def get_resources_values(self) -> ResourceValues:
         return self._resource_values
+
+    def visualize(self):
+        print("Present in " + str(len(self._locations)) + "storages")
 
 
 class Proposal:
@@ -115,3 +125,22 @@ class Problem:
 
     def get_proposals(self) -> dict[int, list[Proposal]]:
         return self._proposals
+
+    def visualize(self):
+        print("Storages: "  + str(len(self._storages)) + " Objects: " + str(len(self._objects)))
+        if len(self._storages) > 10 or len(self._objects) > 100:
+            raise Exception("The visualisation is too big to make sens")
+
+        print("===== VOLUMES =====")
+        for i, vol in enumerate(self._storages):
+            print("Volume: " + str(i))
+            vol.visualize()
+            print("---------")
+        print("===================\n")
+
+        print("===== Items =====")
+        for i, storage_object in enumerate(self._objects):
+            print("Object: " + str(i))
+            storage_object.visualize()
+            print("---------")
+        print("===================\n")

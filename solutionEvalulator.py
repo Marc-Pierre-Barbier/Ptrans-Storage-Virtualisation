@@ -20,7 +20,7 @@ def entropy(list: list[int]) -> float:
 
     # Compute entropy
     for i in probs:
-        ent -= i * log(i, 2) * i
+        ent -= 100 * i * i * log(i, 2)
 
     return ent
 
@@ -135,7 +135,12 @@ def evaluate(problem: Problem):
 
 if __name__ == "__main__":
     time = datetime.datetime.now()
-    problem = generate_problem(1000, 20, 0.2, 200)
+
+    problem = generate_problem(5, 1, 0, 0)
+    problem.visualize()
+
+    problem = generate_problem(1000, 20, 100/20, 200)
+
 
     from glouton import glouton
     glouton_problem = copy.deepcopy(problem)
