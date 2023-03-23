@@ -31,9 +31,25 @@ class ResourceValues:
     def get_write_bandwidth(self) -> int:
         return self._write_bandwidth
 
+    def __str__(self) -> str:
+        return "capacity: %.2f\nRops: %.2f\nRband: %.2f\nWops: %.2f\nWband: %.2f" % (self._capacity, self._read_ops, self._read_bandwidth, self._write_ops, self._write_bandwidth)
+
+    def __add__(self, other: 'ResourceValues'):
+        return ResourceValues(self._capacity + other._capacity, self._read_ops + other._read_ops, self._read_bandwidth + other._read_bandwidth, self._write_ops + other._write_ops, self._write_bandwidth + other._write_bandwidth)
+
+    def __sub__(self, other: 'ResourceValues'):
+        return ResourceValues(self._capacity - other._capacity, self._read_ops - other._read_ops, self._read_bandwidth - other._read_bandwidth, self._write_ops - other._write_ops, self._write_bandwidth - other._write_bandwidth)
+
     def __mul__(self, other: float):
         return ResourceValues(self._capacity * other, self._read_ops * other, self._capacity * other, self._write_ops * other, self._write_bandwidth * other)
 
+    def __truediv__(self, other: 'ResourceValues'):
+        return ResourceValues(self._capacity / other._capacity, self._read_ops / other._read_ops, self._read_bandwidth / other._read_bandwidth, self._write_ops / other._write_ops, self._write_bandwidth / other._write_bandwidth)
+
+    def __gt__(self, other: 'object | ResourceValues') -> bool:
+        if isinstance(other, ResourceValues):
+            return self._capacity > other._capacity and self._read_bandwidth > other._read_bandwidth and self._read_ops > other._read_ops and self._write_bandwidth > other._write_bandwidth and self._write_ops > other._write_ops
+        return False
 
 class Storage:
     def __init__(self, is_working: bool, resources_limits: ResourceValues, resources_current: ResourceValues) -> None:
@@ -86,7 +102,7 @@ class Proposal:
 
 
 class Problem:
-    def __init__(self, storages: list[Storage], objects: list[Object], proposals: dict[Object, list[Proposal]]) -> None:
+    def __init__(self, storages: list[Storage], objects: list[Object], proposals: dict[int, list[Proposal]]) -> None:
         self._storages = storages
         self._objects = objects
         self._proposals = proposals
@@ -97,5 +113,5 @@ class Problem:
     def get_objects(self) -> list[Object]:
         return self._objects
 
-    def get_proposals(self) -> dict[Object, list[Proposal]]:
+    def get_proposals(self) -> dict[int, list[Proposal]]:
         return self._proposals
