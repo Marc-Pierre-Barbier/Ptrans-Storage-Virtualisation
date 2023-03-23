@@ -55,6 +55,7 @@ def generate_problem(server_count: int, usage: float, usage_var: float, proposal
             if(ressources.get_capacity() > total.get_capacity()):
                 ressources = total
 
+            # TODO: do this in pairs
             objects.append(Object([storage], ressources))
             total -= ressources
 

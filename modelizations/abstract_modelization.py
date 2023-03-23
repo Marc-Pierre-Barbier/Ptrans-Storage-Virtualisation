@@ -21,6 +21,11 @@ class Volume:
     def get_resources_used(self) -> list[int]:
         return self._resources_used
 
+    def visualize(self):
+        print("Limits: " + str(self._limits))
+        print("ressources used: " + str(self._resources_used))
+        print("efficiencies: " + str(self._efficiencies))
+
 
 class ConditionType(Enum):
     RESOURCE_CONDITION = 0,
@@ -77,6 +82,10 @@ class Item:
     def get_conditions(self) -> list[Condition]:
         return self._conditions
 
+    def visualize(self):
+        print("Limits: " + str(self._instances))
+        print("Conditions: " + str(self._conditions))
+
 
 class ProblemInstance:
     """An instance of the problem can be viewed as an object of this class."""
@@ -90,3 +99,21 @@ class ProblemInstance:
 
     def get_items(self) -> list[Item]:
         return self._items
+
+    def visualize(self):
+        if len(self._volumes) > 10 or len(self._items) > 10:
+            raise Exception("The visualisation is too big to make sens")
+
+        print("===== VOLUMES =====")
+        for i, vol in enumerate(self._volumes):
+            print("Volume: " + str(i))
+            vol.visualize()
+            print("---------")
+        print("===================\n")
+
+        print("===== Items =====")
+        for i, item in enumerate(self._items):
+            print("Item: " + str(i))
+            item.visualize()
+            print("---------")
+        print("===================\n")
