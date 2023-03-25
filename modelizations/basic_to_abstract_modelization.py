@@ -43,7 +43,7 @@ def basic_to_abstract_problem(basic_problem: Problem) -> ProblemInstance:
 
     # for now we don't explore proposals
 
-    volume_list: list[Volume] = volumes.items()
-    item_list: list[Item] = [Item(instance, []) for instance in items.items()]
+    volume_list: list[Volume] = volumes.values()
+    item_list: list[Item] = [Item(instance, []) for instance in items.values()]
 
     return ProblemInstance(volume_list, item_list)

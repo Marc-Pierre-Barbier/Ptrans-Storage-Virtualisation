@@ -6,7 +6,7 @@ from solvers.ortools_gap_solver import *
 
 
 def main():
-    solver = AssignmentORToolsSolver(5, 0, 0)
+    solver = AssignmentORToolsSolver(5, 5, 0)
     solver.solve()
 
 if __name__ == "__main__":

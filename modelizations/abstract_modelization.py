@@ -21,6 +21,9 @@ class Volume:
     def get_resources_used(self) -> list[int]:
         return self._resources_used
 
+    def set_resources_used(self, resources_used: list[int]) -> None:
+        self._resources_used = resources_used
+
     def visualize(self):
         print("Limits: " + str(self._limits))
         print("ressources used: " + str(self._resources_used))
@@ -55,7 +58,7 @@ class Condition:
 class Resources:
     """A class describing resources for an item."""
 
-    def __init__(self, resources_used, utilities):
+    def __init__(self, resources_used: list[int], utilities: list[int]):
         self._resources_used: list[int] = resources_used
         self._utilities: list[int] = utilities
 
@@ -82,10 +85,6 @@ class Item:
     def get_conditions(self) -> list[Condition]:
         return self._conditions
 
-    def visualize(self):
-        print("Limits: " + str(self._instances))
-        print("Conditions: " + str(self._conditions))
-
 
 class ProblemInstance:
     """An instance of the problem can be viewed as an object of this class."""
@@ -100,8 +99,13 @@ class ProblemInstance:
     def get_items(self) -> list[Item]:
         return self._items
 
+    def visualize_items_in_volume(self, volume: Volume):
+        for i, item in enumerate(self.get_items()):
+            if item.get_instances().get(volume) != None:
+                print("Object " + str(i) + " with values : " + str(item.get_instances().get(volume).get_resources_used()))
+
     def visualize(self):
-        if len(self._volumes) > 10 or len(self._items) > 10:
+        if len(self._volumes) > 100 or len(self._items) > 100:
             raise Exception("The visualisation is too big to make sens")
 
         print("===== VOLUMES =====")
@@ -109,11 +113,6 @@ class ProblemInstance:
             print("Volume: " + str(i))
             vol.visualize()
             print("---------")
-        print("===================\n")
-
-        print("===== Items =====")
-        for i, item in enumerate(self._items):
-            print("Item: " + str(i))
-            item.visualize()
+            self.visualize_items_in_volume(vol)
             print("---------")
         print("===================\n")
