@@ -6,8 +6,8 @@ from modelizations.abstract_modelization import *
 class AssignmentORToolsSolver(Solver):
     """A class implementing a solver to choose dynamically a method to solve the problem."""
 
-    def __init__(self, server_count: int, usage: int, proposals_count: int):
-        super().__init__(server_count, usage, proposals_count)
+    def __init__(self, server_count: int, usage: float, usage_var: float, proposals_count: int):
+        super().__init__(server_count, usage, usage_var, proposals_count)
 
     def solve(self):
         data = {}

@@ -73,12 +73,20 @@ class Storage:
         self._resources_current = resources_current
 
     def visualize(self):
-        print("Working: " + str(self._is_working))
-        print("Usage")
+        # print("Working: " + str(self._is_working))
+        print("Usage %")
         if self.get_resources_current().get_capacity() > 0:
-            print(self.get_resources_limits() / self.get_resources_current() * 100)
+            print(self.get_resources_current() / self.get_resources_limits() * 100)
         else:
             print(self.get_resources_current())
+        print("----------------------")
+        print("Current usage")
+        print(self.get_resources_current())
+        print("----------------------")
+        print("Limits")
+        print(self.get_resources_limits())
+        print("----------------------")
+
 
 class Object:
     def __init__(self, locations: list[Storage], resource_values: ResourceValues) -> None:
@@ -92,7 +100,9 @@ class Object:
         return self._resource_values
 
     def visualize(self):
-        print("Present in " + str(len(self._locations)) + "storages")
+        print("Present in " + str(len(self._locations)) + " storage(s)")
+        print(str(self.get_resources_values()))
+        print("----------------------")
 
 
 class Proposal:
