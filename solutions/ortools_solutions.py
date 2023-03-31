@@ -4,7 +4,7 @@ from modelizations.basic_to_abstract_modelization import *
 
 from ortools.algorithms import pywrapknapsack_solver
 
-
+# interesting
 class ORTools:
     """La classe qui concatène les infos précédents pour en faire un truc OR-Tools friendly"""
 
