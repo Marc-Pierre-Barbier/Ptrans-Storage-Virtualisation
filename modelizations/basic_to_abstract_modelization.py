@@ -18,7 +18,7 @@ def basic_to_abstract_problem(basic_problem: Problem) -> ProblemInstance:
         resources_used: list[int] = [
             storage.get_resources_current().get_capacity(),
             storage.get_resources_current().get_read_bandwidth(),
-            storage.get_resources_current().get_read_ops(),fsjoqjdpiezfdjoeizfjeziof
+            storage.get_resources_current().get_read_ops(),
             storage.get_resources_current().get_write_bandwidth(),
             storage.get_resources_current().get_write_ops()
         ]
