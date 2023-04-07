@@ -106,10 +106,11 @@ class Object:
 
 
 class Proposal:
-    def __init__(self, original_object: Object, proposed_object: Object, proposal_type: ProposalType) -> None:
+    def __init__(self, original_object: Object, proposed_object: Object, proposal_type: ProposalType, priority: int) -> None:
         self._original_object = original_object
         self._proposed_object = proposed_object
         self._proposal_type = proposal_type
+        self._priority = priority
 
     def get_original_object(self) -> Object:
         return self._original_object
@@ -119,8 +120,10 @@ class Proposal:
 
     def get_proposal_type(self) -> ProposalType:
         return self._proposal_type
-
-
+    
+    def get_priority(self) -> int:
+        return self._priority
+    
 class Problem:
     def __init__(self, storages: list[Storage], objects: list[Object], proposals: dict[int, list[Proposal]]) -> None:
         self._storages = storages

@@ -85,7 +85,33 @@ class Item:
     def get_conditions(self) -> list[Condition]:
         return self._conditions
 
+class ProposalType(Enum):
+    UNKNOWN = 0
+    ADD = 1
+    MOVE = 2
+    DELETE = 3
+     
 
+class Proposals:
+    def __init__(self, original_item: Item, proposed_item: Item, proposal_type: ProposalType, priority: int) -> None:
+        self._original_item = original_item
+        self._proposed_item = proposed_item
+        self._proposal_type = proposal_type
+        self._priority = priority
+    
+    def get_original_item(self) -> Item:
+        return self._original_item
+    
+    def get_proposed_item(self) -> Item:
+        return self._proposed_item
+    
+    def get_proposal_type(self) -> ProposalType:
+        return self._proposal_type
+    
+    def get_priority(self) -> int:
+        return self._priority 
+    
+    
 class ProblemInstance:
     """An instance of the problem can be viewed as an object of this class."""
 
