@@ -9,7 +9,7 @@ class Solver:
 
     def __init__(self, server_count: int, usage: float, usage_var: float, proposals_count: int):
         basic_problem: Problem = generate_problem(server_count, usage, usage_var, proposals_count)
-        basic_problem.visualize()
+        basic_problem.log_visualization([0, 1, 2], [0, 1, 2])
         self._problem: ProblemInstance = basic_to_abstract_problem(basic_problem)
         self._problem.visualize()
         self._solved_problem: ProblemInstance = None

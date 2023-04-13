@@ -16,12 +16,14 @@ def generate_ressources_from_storages(storages: list[Storage]) -> ResourceValues
 
 # usage from 0 to 100
 def generate_problem(server_count: int, usage: float, usage_var: float, proposals_count: int) -> Problem:
-    storages: List[Storage] = []
-    proposals: Dict[int, List[Proposal]] = {}
-    objects: List[Object] = []
+    storages: dict[int, Storage] = {}
+    proposals: dict[int, list[Proposal]] = {}
+    objects: dict[int, Object] = {}
     usage /= 100.0
 
     print("Generating servers")
+
+    storage_id = 0
 
     for _ in range(server_count):
         limit = ResourceValues(
@@ -42,12 +44,15 @@ def generate_problem(server_count: int, usage: float, usage_var: float, proposal
         current._write_bandwidth = float(server_usage * limit.get_write_bandwidth())
         current._write_ops = float(server_usage * limit.get_write_ops())
 
-        storages.append(Storage(False, limit, current))
+        storages[storage_id] = (Storage(storage_id, False, [], limit, current))
+        storage_id += 1
 
     print("Generating objects")
 
+    object_id = 0
+
     # TODO: multiple storages / object
-    for storage in storages:
+    for storage in storages.values():
         total = copy.copy(storage.get_resources_current())
 
         while total.get_capacity() > 0:
@@ -56,7 +61,9 @@ def generate_problem(server_count: int, usage: float, usage_var: float, proposal
                 ressources = total
 
             # TODO: do this in pairs
-            objects.append(Object([storage], ressources))
+            objects[object_id] = (Object(object_id, [storage.get_id()], ressources))
+            storage.add_object(object_id)
+            object_id += 1
             total -= ressources
 
     print("Generating proposals")
@@ -67,9 +74,9 @@ def generate_problem(server_count: int, usage: float, usage_var: float, proposal
         new_storages: List[Storage] = []
 
         while len(new_storages) != SPEAD:
-            storage_id = random.randint(0, len(storages) - 1)
-            if storages[storage_id] not in new_storages:
-                new_storages.append(storages[storage_id])
+            storage_uuid = random.randint(0, len(storages) - 1)
+            if storages[storage_uuid] not in new_storages:
+                new_storages.append(storages[storage_uuid])
 
         new_object = Object(new_storages, current_object.get_resources_values())
 
@@ -81,4 +88,4 @@ def generate_problem(server_count: int, usage: float, usage_var: float, proposal
 
     print("Generation done")
 
-    return Problem(storages, objects, proposals)
+    return Problem(storage_id - 1, storages, object_id - 1, objects, proposals)
