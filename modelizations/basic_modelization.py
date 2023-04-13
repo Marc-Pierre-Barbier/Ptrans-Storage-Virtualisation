@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import pandas as pd
 import datetime as dt
+import bisect
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -57,12 +58,12 @@ class ResourceValues:
         return False
 
 class Storage:
-    def __init__(self, id: int, is_working: bool, objects_id: list[int], resources_limits: ResourceValues, resources_current: ResourceValues) -> None:
+    def __init__(self, id: int, is_working: bool, objects_ids: list[int], resources_limits: ResourceValues, resources_current: ResourceValues) -> None:
         self._id = id
         self._is_working = is_working
         self._resources_limits = resources_limits
         self._resources_current = resources_current
-        self._objects_id = objects_id
+        self._objects_ids = objects_ids
 
     def get_id(self) -> int:
         return self._id
@@ -83,10 +84,20 @@ class Storage:
         self._resources_current = resources_current
 
     def add_object(self, object_id: int) -> None:
-        self._objects_id.append(object_id)
+        self._objects_ids.append(object_id)
 
-    def get_objects_id(self) -> list[int]:
-        return self._objects_id
+    def get_objects_ids(self) -> list[int]:
+        return self._objects_ids
+
+    def add_object_id(self, object_id: int) -> None:
+        i = bisect.bisect_left(self.get_objects_ids(), object_id)
+        if i != len(self.get_objects_ids()) and self.get_objects_ids()[i] == object_id:
+            bisect.insort(self._objects_ids, object_id)
+
+    def remove_object_id(self, object_id: int) -> None:
+        i = bisect.bisect_left(self.get_objects_ids(), object_id)
+        if i != len(self.get_objects_ids()) and self.get_objects_ids()[i] == object_id:
+            self._objects_ids.pop(i)
 
     def get_full_resources_str(self) -> str:
         resources_current: ResourceValues = self.get_resources_current()
@@ -113,33 +124,43 @@ class Storage:
 
 
 class Object:
-    def __init__(self, id: int, storages_id: list[int], resource_values: ResourceValues) -> None:
+    def __init__(self, id: int, storages_ids: list[int], resource_values: ResourceValues) -> None:
         self._id = id
-        self._storages_id = storages_id
+        self._storages_id = storages_ids
         self._resource_values = resource_values
 
     def get_id(self) -> int:
         return self._id
 
-    def get_storages_id(self) -> list[int]:
-        return self._storages_id
+    def get_storages_ids(self) -> list[int]:
+        return self._storages_ids
 
     def get_resources_values(self) -> ResourceValues:
         return self._resource_values
 
+    def set_storages_ids(self, storages_ids: list[int]) -> None:
+        self._storages_id = storages_ids
+
 
 class Proposal:
-    def __init__(self, original_object: Object, proposed_object: Object, proposal_type: ProposalType, priority: float) -> None:
-        self._original_object = original_object
-        self._proposed_object = proposed_object
+    def __init__(self, id: int, object_id: int, proposed_storages: list[int], proposal_type: ProposalType, priority: float) -> None:
+        self._id = id
+        self._object_id = object_id
+        self._proposed_storages = proposed_storages
         self._proposal_type = proposal_type
         self._priority = priority
 
-    def get_original_object(self) -> Object:
-        return self._original_object
+    def get_object_id(self) -> int:
+        return self._object_id
 
-    def get_proposed_object(self) -> Object:
-        return self._proposed_object
+    def get_item_id(self) -> int:
+        return self._object_id
+
+    def get_proposed_storages(self) -> list[int]:
+        return self._proposed_storages
+
+    def get_proposed_volumes(self) -> list[int]:
+        return self._proposed_storages
 
     def get_proposal_type(self) -> ProposalType:
         return self._proposal_type
@@ -174,8 +195,23 @@ class Problem:
     def get_object_list(self) -> list[Object]:
         return self._objects.values()
 
-    def get_proposals(self) -> dict[int, list[Proposal]]:
+    def get_proposals(self) -> dict[int, Proposal]:
         return self._proposals
+
+    def update_modelization(self, proposals_kept: list[int]) -> None:
+        for proposal_id in proposals_kept:
+            proposal: Proposal = self.get_proposals()[proposal_id]
+            object: Object = self.get_objects()[proposal.get_object_id()]
+
+            for storage_id in object.get_storages_ids():
+                self.get_storages()[storage_id].remove_object_id(object.get_id())
+
+            storages_ids: list[int] = proposal.get_proposed_storages()
+            object._storages_id = storages_ids
+            for storage_id in storages_ids:
+                storage: Storage = self.get_storages()[storage_id]
+
+                storage.add_object_id(object.get_id())
 
     def get_presence_matrix(self) -> np.ndarray:
         presence_matrix = np.full((self.get_object_max_id() + 1, self.get_storage_max_id() + 1), '-       -', 'U9')
@@ -186,7 +222,7 @@ class Problem:
 
         return presence_matrix
 
-    def log_visualization(self, tracked_objects: list[int], tracked_storages: list[int]):
+    def log_visualization(self, tracked_objects: list[int], tracked_storages: list[int]) -> None:
         with open('basic_visualization/' + dt.datetime.now().ctime().replace(':', '-') + '.txt', 'x') as file:
             file.write(
                 'Number of OBJECTS : ' +\
