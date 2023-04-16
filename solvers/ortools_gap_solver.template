@@ -67,7 +67,7 @@ class AssignmentORToolsSolver(Solver):
         objective = solver.Objective()
         for i in data['all_items']:
             for b in data['all_bins']:
-                objective.SetCoefficient(x[i, b], data['bin_capacities'][b])
+                objective.SetCoefficient(x[i, b], data['bin_capacities'][b]*2)
         objective.SetMinimization()
 
         status = solver.Solve()

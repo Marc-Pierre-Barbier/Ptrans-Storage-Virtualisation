@@ -1,0 +1,19 @@
+storages_number files_number proposals_number
+
+storage_id storage_capacity rops rband wops wband
+storage_id storage_capacity rops rband wops wband
+storage_id storage_capacity rops rband wops wband
+...
+storage_id storage_capacity rops rband wops wband
+
+file_id file_capacity rops rband wops wband storage_id storage_id storage_id
+file_id file_capacity rops rband wops wband storage_id storage_id storage_id
+file_id file_capacity rops rband wops wband storage_id storage_id storage_id
+...
+file_id file_capacity rops rband wops wband storage_id storage_id storage_id
+
+proposal_id file_id proposal_type priority storage_id storage_id storage_id
+proposal_id file_id proposal_type priority storage_id storage_id storage_id
+proposal_id file_id proposal_type priority storage_id storage_id storage_id
+...
+proposal_id file_id proposal_type priority storage_id storage_id storage_id
