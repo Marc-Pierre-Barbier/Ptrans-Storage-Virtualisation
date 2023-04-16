@@ -1,6 +1,6 @@
 from modelizations.abstract_modelization import *
 from modelizations.basic_modelization import *
-from modelizations.basic_to_abstract_modelization import *
+from modelizations.import_export_problem import *
 
 from ortools.algorithms import pywrapknapsack_solver
 

@@ -60,7 +60,6 @@ class ResourceValues:
 class Storage:
     def __init__(self, id: int, is_working: bool, objects_ids: list[int], resources_limits: ResourceValues, resources_current: ResourceValues) -> None:
         self._id = id
-        self._is_working = is_working
         self._resources_limits = resources_limits
         self._resources_current = resources_current
         self._objects_ids = objects_ids
@@ -68,17 +67,11 @@ class Storage:
     def get_id(self) -> int:
         return self._id
 
-    def storage_is_working(self) -> bool:
-        return self._is_working
-
     def get_resources_limits(self) -> ResourceValues:
         return self._resources_limits
 
     def get_resources_current(self) -> ResourceValues:
         return self._resources_current
-
-    def set_is_working(self, working: bool) -> None:
-        self._is_working = working
 
     def set_resources_current(self, resources_current: ResourceValues) -> None:
         self._resources_current = resources_current
