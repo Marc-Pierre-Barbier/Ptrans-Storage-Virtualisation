@@ -127,7 +127,7 @@ class Problem:
         return self._proposals
 
     def visualize(self):
-        print("Storages: "  + str(len(self._storages)) + " Objects: " + str(len(self._objects)))
+        print("Storages: " + str(len(self._storages)) + " Objects: " + str(len(self._objects)))
         if len(self._storages) > 10 or len(self._objects) > 100:
             raise Exception("The visualisation is too big to make sens")
 
