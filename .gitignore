@@ -2,3 +2,6 @@ venv
 .idea
 .vscode
 __pycache__
+modelizations\__pycache__
+basic_visualization\*
+solvers\__pycache__

@@ -1,8 +1,10 @@
-from modelizations import *
+from modelizations.abstract_modelization import *
+from modelizations.basic_modelization import *
+from modelizations.import_export_problem import *
 
 from ortools.algorithms import pywrapknapsack_solver
 
-
+# interesting
 class ORTools:
     """La classe qui concatène les infos précédents pour en faire un truc OR-Tools friendly"""
 

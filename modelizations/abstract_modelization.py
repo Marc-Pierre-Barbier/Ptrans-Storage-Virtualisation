@@ -1,98 +1,80 @@
-from enum import Enum
+from modelizations.basic_modelization import *
+
+
+LIMITS: dict[int, tuple[str, float]] = {
+    0: ('capacity', 1.0),
+    1: ('read_ops', 0.5),
+    2: ('read_bandwidth', 0.5),
+    3: ('write_ops', 0.5),
+    4: ('write_bandwidth', 0.5),
+}
 
 
 class Volume:
     """A basic container class."""
 
-    def __init__(self, limits: list[int], efficiencies: list[int], resources_used: list[int]):
-        self._limits: list[int] = limits  # cannot be skipped
-        self._resources_used: list[int] = resources_used
-        self._efficiencies: list[int] = efficiencies
-        # maybe we should add a priority for each efficiency. does it come from characteristics?
-        # self._location -> could be a leaf of a tree representing the geographical regions
-        # self._state -> enumeration of the different states of the node (OK, no response, ...)
+    def __init__(self, id: int, limits: dict[int, int], items: list[int]):
+        self._id = id
+        self._limits: list[int] = limits
+        self._items: list[int] = items
 
-    def get_limits(self) -> list[int]:
+    def get_id(self) -> int:
+        return self._id
+
+    def get_limits(self) -> dict[int, int]:
         return self._limits
-
-    def get_efficiencies(self) -> list[int]:
-        return self._efficiencies
-
-    def get_resources_used(self) -> list[int]:
-        return self._resources_used
-
-    def visualize(self):
-        print("Limits: " + str(self._limits))
-        print("ressources used: " + str(self._resources_used))
-        print("efficiencies: " + str(self._efficiencies))
-
-
-class ConditionType(Enum):
-    RESOURCE_CONDITION = 0,
-    LOCATION_CONDITION = 1
-    # To be continued...
-
-
-class Condition:
-    """A class describing what an item needs and what is the priority, in percentages, of this need."""
-
-    def __init__(self, condition_type: ConditionType, priority: float, **kwargs):
-        """We shall add more documentation here."""
-        self._type: ConditionType = condition_type
-        self._priority = priority
-        # kwargs is a dictionary used to add named variables only
-        # for example :
-        self.val = kwargs.get('val', "default value")
-        # should be called as Condition(conditionType, priority, val="value")
-
-    def get_condition_type(self) -> ConditionType:
-        return self._type
-
-    def get_priority(self) -> float:
-        return self._priority
-
-
-class Resources:
-    """A class describing resources for an item."""
-
-    def __init__(self, resources_used, utilities):
-        self._resources_used: list[int] = resources_used
-        self._utilities: list[int] = utilities
-
-    def get_resources_used(self) -> list[int]:
-        return self._resources_used
-
-    def get_utilities(self) -> list[int]:
-        return self._utilities
 
 
 class Item:
     """A basic object class."""
 
-    def __init__(self, instances: dict[Volume, Resources], conditions: list[Condition]):
-        self._instances: dict[Volume, Resources] = instances  # can be null if the item is not placed
-        self._conditions: list[Condition] = conditions
-        # self._synchronization: bool = true -> is the object synchronized well?
-        # self._state -> enumeration of the different states of the object
-        # (what does it look like? maybe object in the system or not?)
+    def __init__(self, id: int, resources: dict[int, int], volumes: list[int]):
+        self._id = id
+        self._volumes: list[int] = volumes
+        self._resources: dict[int, int] = resources
 
-    def get_instances(self) -> dict[Volume, Resources]:
-        return self._instances
+    def get_id(self) -> int:
+        return self._id
 
-    def get_conditions(self) -> list[Condition]:
-        return self._conditions
+    def get_volumes(self) -> list[int]:
+        return self._volumes
 
-    def visualize(self):
-        print("Limits: " + str(self._instances))
-        print("Conditions: " + str(self._conditions))
+    def get_resources(self) -> dict[int, int]:
+        return self._resources
 
 
 class ProblemInstance:
     """An instance of the problem can be viewed as an object of this class."""
 
-    def __init__(self, volumes: list[Volume], items: list[Item]):
+    def __init__(self, basic_problem: Problem):
+        volumes: dict[int, Volume] = {}
+        items: dict[int, Item] = {}
+
+        for storage in basic_problem.get_storages().values():
+            limits: dict[int, int] = {
+                0: storage.get_resources_limits().get_capacity(),
+                1: storage.get_resources_limits().get_read_bandwidth(),
+                2: storage.get_resources_limits().get_read_ops(),
+                3: storage.get_resources_limits().get_write_bandwidth(),
+                4: storage.get_resources_limits().get_write_ops()
+            }
+
+            volumes[storage.get_id()] = Volume(storage.get_id(), limits, storage.get_objects_ids())
+
+        for object in basic_problem.get_objects().values():
+            resources: dict[int, int] = {
+                0: object.get_resources_values().get_capacity(),
+                1: object.get_resources_values().get_read_bandwidth(),
+                2: object.get_resources_values().get_read_ops(),
+                3: object.get_resources_values().get_write_bandwidth(),
+                4: object.get_resources_values().get_write_ops()
+            }
+
+            items[object.get_id()] = Item(object.get_id(), resources, object.get_storages_ids())
+
         self._volumes: list[Volume] = volumes
         self._items: list[Item] = items
+        self._proposals: dict[int, Proposal] = basic_problem.get_proposals()
 
     def get_volumes(self) -> list[Volume]:
         return self._volumes
@@ -100,20 +82,5 @@ class ProblemInstance:
     def get_items(self) -> list[Item]:
         return self._items
 
-    def visualize(self):
-        if len(self._volumes) > 10 or len(self._items) > 10:
-            raise Exception("The visualisation is too big to make sens")
-
-        print("===== VOLUMES =====")
-        for i, vol in enumerate(self._volumes):
-            print("Volume: " + str(i))
-            vol.visualize()
-            print("---------")
-        print("===================\n")
-
-        print("===== Items =====")
-        for i, item in enumerate(self._items):
-            print("Item: " + str(i))
-            item.visualize()
-            print("---------")
-        print("===================\n")
+    def get_proposals(self) -> list[Proposal]:
+        return self._proposals
