@@ -1,5 +1,7 @@
-from modelizations.basic_modelization import ResourceValues
+import copy
+from modelizations.basic_modelization import Object, Proposal, ProposalType, ResourceValues, Storage, Problem
 import numpy as np
+import random
 
 
 class File_generator:
@@ -88,7 +90,7 @@ class Server_generator:
             int(abs(np.random.normal(loc=delta.get_write_ops(), scale=self.capacity_spread * self.capacity_min.get_write_ops()))) + self.capacity_min.get_write_ops()
         )
 
-        delta: ResourceValues = self.overfilled_max - self.overfilled_max
+        delta: ResourceValues = self.overfilled_max - self.overfilled_min
 
         overfilled = ResourceValues(
             int(abs(np.random.normal(loc=delta.get_capacity(), scale=self.overfilled_spread * self.overfilled_min.get_capacity()))) + self.overfilled_min.get_capacity(),
@@ -106,39 +108,116 @@ class Server_generator:
 # it can be modified by using max *= (count)
 def get_ssd_server():
     # Benchmark of my Corsair MP400:
-    max = ResourceValues(
+    capacity = ResourceValues(
         30000000000000,
         50000,
         3400000000,
         50000,
         491300000,
     )
-    return Server_generator(max, 0.1, max, max)
+    return Server_generator(capacity, 0.1, 0.95, 0.1)
 
 
 def get_hdd_server():
-    max = ResourceValues(
+    capacity = ResourceValues(
         120000000000000,
         320,
         400000000,
         320,
         291300000,
     )
-    return Server_generator(max, 0.1, max, max)
+    return Server_generator(capacity, 0.1, 0.95, 0.1)
 
 
-class Problem_generator:
+class ProblemGenerator:
     file_count: int
     server_count: int
+    proposal_count: int
     # Generator : weight the weight define the probability of using this generator
-    server_repartition: dict[Server_generator, float]
+    server_repartition: list[tuple[Server_generator, int]]
     file_generator: File_generator
 
-    def __init__(self, file_count: int, server_count: int, server_repartition: dict[float, Server_generator], file_generator: File_generator) -> None:
+    def __init__(self, file_count: int, server_count: int, proposal_count: int, server_repartition: list[tuple[Server_generator, int]], file_generator: File_generator) -> None:
         self.file_count = file_count
         self.server_count = server_count
         self.server_repartition = server_repartition
         self.file_generator = file_generator
+        self.proposal_count = proposal_count
 
     def generate(self):
-        pass
+        servers: list[Storage] = []
+        server_dict: dict[int, Storage] = {}
+        files: list[Object] = []
+        files_dict: dict[int, Object] = {}
+        proposal_dict: dict[int, list[Proposal]] = {}
+        proposals: list[Proposal] = []
+
+        # Generating servers
+        wheight_total = 0
+        for _generator, weight in self.server_repartition:
+            wheight_total += weight
+
+        for id in range(self.server_count):
+            index = random.randint(1, wheight_total)
+
+            target_generator = self.server_repartition[0][0]
+            for server in self.server_repartition:
+                index -= server[1]
+                if index < 0:
+                    target_generator: Server_generator = server[0]
+                    break
+
+            capacity, _ = target_generator.generate_server()
+
+            storage = Storage(id, False, [], capacity, ResourceValues(0, 0, 0, 0, 0))
+            servers.append(storage)
+            server_dict[id] = storage
+
+        # Generating files
+        for id in range(self.file_count):
+            file_size = self.file_generator.generate_file()
+            new_file = Object(id, [], file_size)
+            files.append(new_file)
+            files_dict[id] = new_file
+
+        # Binding the files and servers
+        for file in files:
+            available_servers = copy.copy(servers)
+            while len(file.get_storages_ids()) < 2:
+                if len(available_servers) == 0:
+                    raise Exception('No enough server for the numbers and size of the files')
+
+                index = random.randint(1, len(available_servers)) - 1
+                if available_servers[index].get_resources_current() + file.get_resources_values() < available_servers[index].get_resources_limits():
+                    available_servers[index].add_object(file.get_id())
+                    file.get_storages_ids().append(available_servers[index].get_id())
+                available_servers.pop(index)
+
+        available_files = copy.copy(files)
+        # Generating proposals
+        while len(proposals) < self.proposal_count:
+            file_index = 0
+            try:
+                file_index = random.randint(0, len(available_files) - 1)
+                current_file = available_files[file_index]
+                current_id = current_file.get_id()
+
+                proposed_storages: list[int] = []
+                available_servers = copy.copy(servers)
+
+                while len(proposed_storages) < 2:
+                    if len(available_servers) == 0:
+                        raise Exception('No enough server for the numbers and size of the files')
+
+                    index = random.randint(1, len(available_servers)) - 1
+                    if available_servers[index].get_resources_current() + current_file.get_resources_values() < available_servers[index].get_resources_limits():
+                        proposed_storages.append(available_servers[index].get_id())
+                    available_servers.pop(index)
+
+                if current_id not in proposal_dict:
+                    proposal_dict[current_id] = []
+                proposal_dict[current_id].append(Proposal(current_id, current_file.get_id(), proposed_storages, ProposalType.MOVE, 0))
+            except Exception:
+                available_files.pop(file_index)
+
+        return Problem(self.server_count, server_dict, self.file_count, files_dict, proposal_dict)

@@ -1,11 +1,11 @@
 from enum import Enum
 import sys
 import numpy as np
-import pandas as pd
 import datetime as dt
 import bisect
 
 np.set_printoptions(threshold=sys.maxsize)
+
 
 class ProposalType(Enum):
     UNKNOWN = 0
@@ -15,26 +15,26 @@ class ProposalType(Enum):
 
 
 class ResourceValues:
-    def __init__(self, capacity: int, read_ops: int, read_bandwidth: int, write_ops: int, write_bandwidth: int) -> None:
-        self._capacity = capacity
-        self._read_ops = read_ops
-        self._read_bandwidth = read_bandwidth
-        self._write_ops = write_ops
-        self._write_bandwidth = write_bandwidth
+    def __init__(self, capacity: int | float, read_ops: int | float, read_bandwidth: int | float, write_ops: int | float, write_bandwidth: int | float) -> None:
+        self._capacity = float(capacity)
+        self._read_ops = float(read_ops)
+        self._read_bandwidth = float(read_bandwidth)
+        self._write_ops = float(write_ops)
+        self._write_bandwidth = float(write_bandwidth)
 
-    def get_capacity(self) -> int:
+    def get_capacity(self) -> float:
         return self._capacity
 
-    def get_read_ops(self) -> int:
+    def get_read_ops(self) -> float:
         return self._read_ops
 
-    def get_read_bandwidth(self) -> int:
+    def get_read_bandwidth(self) -> float:
         return self._read_bandwidth
 
-    def get_write_ops(self) -> int:
+    def get_write_ops(self) -> float:
         return self._write_ops
 
-    def get_write_bandwidth(self) -> int:
+    def get_write_bandwidth(self) -> float:
         return self._write_bandwidth
 
     def __str__(self) -> str:
@@ -56,6 +56,7 @@ class ResourceValues:
         if isinstance(other, ResourceValues):
             return self._capacity > other._capacity and self._read_bandwidth > other._read_bandwidth and self._read_ops > other._read_ops and self._write_bandwidth > other._write_bandwidth and self._write_ops > other._write_ops
         return False
+
 
 class Storage:
     def __init__(self, id: int, is_working: bool, objects_ids: list[int], resources_limits: ResourceValues, resources_current: ResourceValues) -> None:
@@ -119,7 +120,7 @@ class Storage:
 class Object:
     def __init__(self, id: int, storages_ids: list[int], resource_values: ResourceValues) -> None:
         self._id = id
-        self._storages_id = storages_ids
+        self._storages_ids = storages_ids
         self._resource_values = resource_values
 
     def get_id(self) -> int:
@@ -183,12 +184,12 @@ class Problem:
         return self._objects
 
     def get_storage_list(self) -> list[Storage]:
-        return self._storages.values()
+        return list(self._storages.values())
 
     def get_object_list(self) -> list[Object]:
-        return self._objects.values()
+        return list(self._objects.values())
 
-    def get_proposals(self) -> dict[int, Proposal]:
+    def get_proposals(self) -> dict[int, list[Proposal]]:
         return self._proposals
 
     def update_modelization(self, proposals_kept: list[int]) -> None:
@@ -218,11 +219,11 @@ class Problem:
     def log_visualization(self, tracked_objects: list[int], tracked_storages: list[int]) -> None:
         with open('basic_visualization/' + dt.datetime.now().ctime().replace(':', '-') + '.txt', 'x') as file:
             file.write(
-                'Number of OBJECTS : ' +\
-                str(len(self._objects)) +\
-                ' - Number of STORAGES: ' +\
-                str(len(self._storages)) +\
-                '\n---------------------\n' +\
+                'Number of OBJECTS : ' +
+                str(len(self._objects)) +
+                ' - Number of STORAGES: ' +
+                str(len(self._storages)) +
+                '\n---------------------\n' +
                 'Presence matrix indicating (object, storage) when object is in storage (using indexes)\n\n'
             )
             file.write(np.array2string(self.get_presence_matrix(), max_line_width=99999999999999))
@@ -233,7 +234,7 @@ class Problem:
 
 
 class Tracker:
-    def __init__(self, problem: Problem, object: Object, storage: Storage, in_depth: bool = False) -> None:
+    def __init__(self, problem: Problem, object: Object, storage: Storage | None, in_depth: bool = False) -> None:
         self._problem = problem
         self._object = object
         self._storage = storage
