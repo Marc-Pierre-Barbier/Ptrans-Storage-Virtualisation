@@ -53,27 +53,31 @@ class Server_generator:
     capacity_min: ResourceValues
     capacity_spread: float
 
-    def __init__(self, capacity_max: ResourceValues, capacity_min: ResourceValues | int | float, overfilled: ResourceValues | int | float, overfilled_acuracy: ResourceValues | int | float) -> None:
-        if isinstance(capacity_min, ResourceValues) and isinstance(overfilled, ResourceValues) and isinstance(overfilled_acuracy, ResourceValues):
-            self._constructorA(capacity_max, capacity_min, overfilled, overfilled_acuracy)
-        elif isinstance(capacity_min, int | float) and isinstance(overfilled, int | float) and isinstance(overfilled_acuracy, int | float):
-            self._constructorB(capacity_max, capacity_min, overfilled, overfilled_acuracy)
+    def __init__(self, capacity_max: ResourceValues, capacity_min: ResourceValues | int | float, overfilled_max: ResourceValues | int | float, overfilled_min: ResourceValues | int | float, capacity_spread: float, overfilled_spread: float) -> None:
+        if isinstance(capacity_min, ResourceValues) and isinstance(overfilled_max, ResourceValues) and isinstance(overfilled_min, ResourceValues):
+            self._constructorA(capacity_max, capacity_min, overfilled_max, overfilled_min, capacity_spread, overfilled_spread)
+        elif isinstance(capacity_min, int | float) and isinstance(overfilled_max, int | float) and isinstance(overfilled_min, int | float):
+            self._constructorB(capacity_max, capacity_min, overfilled_max, overfilled_min, capacity_spread, overfilled_spread)
         else:
             raise Exception('Invalid parameters')
 
-    def _constructorB(self, capacity_max: ResourceValues, capacity_min: int | float, overfilled: int | float, overfilled_acuracy: int | float):
+    def _constructorB(self, capacity_max: ResourceValues, capacity_min: int | float, overfilled_max: int | float, overfilled_min: int | float, capacity_spread: float, overfilled_spread: float):
         if capacity_min > 1 or capacity_min < 0:
             raise Exception('Invalid capacity limit')
 
-        if overfilled > 1 or overfilled < 0 or overfilled_acuracy > 1 or overfilled_acuracy < 0:
+        if overfilled_max > 1 or overfilled_max < 0 or overfilled_min > 1 or overfilled_min < 0:
             raise Exception('Invalid overfill specifications')
 
+        self.capacity_spread = capacity_spread
+        self.overfilled_spread = overfilled_spread
         self.capacity_max = capacity_max
         self.capacity_min = capacity_max * capacity_min
-        self.overfilled_max = capacity_max * (overfilled + overfilled_acuracy)
-        self.overfilled_min = capacity_max * (overfilled - overfilled_acuracy)
+        self.overfilled_max = capacity_max * overfilled_max
+        self.overfilled_min = capacity_max * overfilled_min
 
-    def _constructorA(self, capacity_max: ResourceValues, capacity_min: ResourceValues | None, overfilled_max: ResourceValues | None, overfilled_min: ResourceValues | None):
+    def _constructorA(self, capacity_max: ResourceValues, capacity_min: ResourceValues | None, overfilled_max: ResourceValues | None, overfilled_min: ResourceValues | None, capacity_spread: float, overfilled_spread: float):
+        self.capacity_spread = capacity_spread
+        self.overfilled_spread = overfilled_spread
         self.capacity_max = capacity_max
         self.capacity_min = capacity_min if capacity_min is not None else capacity_max
         self.overfilled_max = overfilled_max if overfilled_max is not None else capacity_max
@@ -115,7 +119,7 @@ def get_ssd_server():
         50000,
         491300000,
     )
-    return Server_generator(capacity, 0.1, 0.95, 0.1)
+    return Server_generator(capacity, 0.1, 0.95, 0.90, 0.5, 0.1)
 
 
 def get_hdd_server():
@@ -126,7 +130,7 @@ def get_hdd_server():
         320,
         291300000,
     )
-    return Server_generator(capacity, 0.1, 0.95, 0.1)
+    return Server_generator(capacity, 0.1, 0.95, 0.9, 0.5, 0.1)
 
 
 class ProblemGenerator:
@@ -221,3 +225,19 @@ class ProblemGenerator:
                 available_files.pop(file_index)
 
         return Problem(self.server_count, server_dict, self.file_count, files_dict, proposal_dict)
+
+
+if __name__ == "__main__":
+    file_max = ResourceValues(
+        10000000000,
+        1000,
+        10000000000,
+        1000,
+        5000000000
+    )
+
+    file_generator = File_generator(file_max, 0.1, 0.2, 0.5)
+
+    generator = ProblemGenerator(300, 10000, 100, [tuple([get_ssd_server(), 20]), tuple([get_hdd_server(), 100])], file_generator)
+    problem = generator.generate()
+    print(problem)
