@@ -198,8 +198,10 @@ class ProblemGenerator:
                 available_servers.pop(index)
 
         available_files = copy.copy(files)
+
         # Generating proposals
         while len(proposals) < self.proposal_count:
+            print(len(proposals))
             file_index = 0
             try:
                 file_index = random.randint(0, len(available_files) - 1)
@@ -213,14 +215,17 @@ class ProblemGenerator:
                     if len(available_servers) == 0:
                         raise Exception('No enough server for the numbers and size of the files')
 
-                    index = random.randint(1, len(available_servers)) - 1
+                    index = random.randint(0, len(available_servers) - 1)
                     if available_servers[index].get_resources_current() + current_file.get_resources_values() < available_servers[index].get_resources_limits():
                         proposed_storages.append(available_servers[index].get_id())
                     available_servers.pop(index)
 
                 if current_id not in proposal_dict:
                     proposal_dict[current_id] = []
-                proposal_dict[current_id].append(Proposal(current_id, current_file.get_id(), proposed_storages, ProposalType.MOVE, 0))
+
+                proposal = Proposal(current_id, current_file.get_id(), proposed_storages, ProposalType.MOVE, 0)
+                proposal_dict[current_id].append(proposal)
+                proposals.append(proposal)
             except Exception:
                 available_files.pop(file_index)
 
@@ -231,9 +236,9 @@ if __name__ == "__main__":
     file_max = ResourceValues(
         10000000000,
         1000,
-        10000000000,
+        10000000,
         1000,
-        5000000000
+        5000000
     )
 
     file_generator = File_generator(file_max, 0.1, 0.2, 0.5)
