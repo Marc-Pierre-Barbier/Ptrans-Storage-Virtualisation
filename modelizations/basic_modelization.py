@@ -1,4 +1,5 @@
 from enum import Enum
+from itertools import chain
 import sys
 import numpy as np
 import datetime as dt
@@ -12,6 +13,21 @@ class ProposalType(Enum):
     ADD = 1
     MOVE = 2
     DELETE = 3
+
+    @staticmethod
+    def form_id(id: int) -> 'ProposalType':
+        match id:
+            case 0:
+                return ProposalType.UNKNOWN
+            case 1:
+                return ProposalType.ADD
+            case 2:
+                return ProposalType.MOVE
+            case 3:
+                return ProposalType.DELETE
+            case _:
+                return ProposalType.UNKNOWN
+
 
 
 class ResourceValues:
@@ -77,9 +93,6 @@ class Storage:
     def set_resources_current(self, resources_current: ResourceValues) -> None:
         self._resources_current = resources_current
 
-    def add_object(self, object_id: int) -> None:
-        self._objects_ids.append(object_id)
-
     def get_objects_ids(self) -> list[int]:
         return self._objects_ids
 
@@ -144,6 +157,9 @@ class Proposal:
         self._proposal_type = proposal_type
         self._priority = priority
 
+    def get_id(self) -> int:
+        return self._id
+
     def get_object_id(self) -> int:
         return self._object_id
 
@@ -189,8 +205,15 @@ class Problem:
     def get_object_list(self) -> list[Object]:
         return list(self._objects.values())
 
+    """
+        return
+            dict[objectid, proposal list]
+    """
     def get_proposals(self) -> dict[int, list[Proposal]]:
         return self._proposals
+
+    def get_proposals_list(self) -> list[Proposal]:
+        return list(chain(*self._proposals.values()))
 
     def update_modelization(self, proposals_kept: list[int]) -> None:
         for proposal_id in proposals_kept:

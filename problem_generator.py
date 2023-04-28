@@ -193,7 +193,7 @@ class ProblemGenerator:
 
                 index = random.randint(1, len(available_servers)) - 1
                 if available_servers[index].get_resources_current() + file.get_resources_values() < available_servers[index].get_resources_limits():
-                    available_servers[index].add_object(file.get_id())
+                    available_servers[index].add_object_id(file.get_id())
                     file.get_storages_ids().append(available_servers[index].get_id())
                 available_servers.pop(index)
 
