@@ -15,7 +15,7 @@ class ProposalType(Enum):
     DELETE = 3
 
     @staticmethod
-    def form_id(id: int) -> 'ProposalType':
+    def from_id(id: int) -> 'ProposalType':
         match id:
             case 0:
                 return ProposalType.UNKNOWN
@@ -27,7 +27,6 @@ class ProposalType(Enum):
                 return ProposalType.DELETE
             case _:
                 return ProposalType.UNKNOWN
-
 
 
 class ResourceValues:
@@ -75,7 +74,7 @@ class ResourceValues:
 
 
 class Storage:
-    def __init__(self, id: int, is_working: bool, objects_ids: list[int], resources_limits: ResourceValues, resources_current: ResourceValues) -> None:
+    def __init__(self, id: int, objects_ids: list[int], resources_limits: ResourceValues, resources_current: ResourceValues) -> None:
         self._id = id
         self._resources_limits = resources_limits
         self._resources_current = resources_current
@@ -97,9 +96,9 @@ class Storage:
         return self._objects_ids
 
     def add_object_id(self, object_id: int) -> None:
-        i = bisect.bisect_left(self.get_objects_ids(), object_id)
-        if i != len(self.get_objects_ids()) and self.get_objects_ids()[i] == object_id:
-            bisect.insort(self._objects_ids, object_id)
+        i = bisect.bisect_right(self.get_objects_ids(), object_id)
+        if i == 0 or self.get_objects_ids()[i - 1] != object_id:
+            self._objects_ids.insert(i, object_id)
 
     def remove_object_id(self, object_id: int) -> None:
         i = bisect.bisect_left(self.get_objects_ids(), object_id)
@@ -234,7 +233,7 @@ class Problem:
         presence_matrix = np.full((self.get_object_max_id() + 1, self.get_storage_max_id() + 1), '-       -', 'U9')
 
         for object in self.get_object_list():
-            for storage_id in object.get_storages_id():
+            for storage_id in object.get_storages_ids():
                 presence_matrix[object.get_id(), storage_id] = f'({object.get_id()}, {storage_id})    '
 
         return presence_matrix
@@ -249,7 +248,7 @@ class Problem:
                 '\n---------------------\n' +
                 'Presence matrix indicating (object, storage) when object is in storage (using indexes)\n\n'
             )
-            file.write(np.array2string(self.get_presence_matrix(), max_line_width=99999999999999))
+            # file.write(np.array2string(self.get_presence_matrix(), max_line_width=99999999999999))
             for tracked_object in tracked_objects:
                 file.write(Tracker(self, self.get_objects()[tracked_object], None, True).track())
             for tracked_storage in tracked_storages:
@@ -269,7 +268,7 @@ class Tracker:
             return header + self._storage.get_full_resources_str()
         else:
             objects: str = ''
-            for object in self._storage.get_objects_id():
+            for object in self._storage.get_objects_ids():
                 objects += Tracker(self._problem, self._problem.get_objects()[object], None).track()
             return header + self._storage.get_full_resources_str() + '\n---------\n' + objects + '\n\n\n---------------------\n\n\n'
 
@@ -279,7 +278,7 @@ class Tracker:
             return header + str(self._object.get_resources_values()) + '\n---\n'
         else:
             storages: str = ''
-            for storage in self._object.get_storages_id():
+            for storage in self._object.get_storages_ids():
                 storages += Tracker(self._problem, None, self._problem.get_storages()[storage]).track()
             return header + str(self._object.get_resources_values()) + '\n---------\n' + storages + '\n\n\n---------------------\n\n\n'
 

@@ -1,4 +1,3 @@
-
 import functools
 from modelizations.basic_modelization import Object, Problem, Proposal, ProposalType, Storage, ResourceValues
 
@@ -28,37 +27,38 @@ def parse_problem(path: str) -> Problem:
                 parameters = line.split(' ')
 
                 id = int(parameters[0])
-                capacity = int(parameters[1])
-                rops = int(parameters[2])
-                rband = int(parameters[3])
-                wops = int(parameters[4])
-                wband = int(parameters[5])
+                capacity = float(parameters[1])
+                rops = float(parameters[2])
+                rband = float(parameters[3])
+                wops = float(parameters[4])
+                wband = float(parameters[5])
                 resources = ResourceValues(capacity, rops, rband, wops, wband)
 
-                storages[id] = Storage(id, False, [], resources, emptyRessource)
+                storages[id] = Storage(id, [], resources, emptyRessource)
                 continue
 
             if mode == OBJECT_MODE:
                 parameters = line.split(' ')
 
                 id = int(parameters[0])
-                capacity = int(parameters[1])
-                rops = int(parameters[2])
-                rband = int(parameters[3])
-                wops = int(parameters[4])
-                wband = int(parameters[5])
+                capacity = float(parameters[1])
+                rops = float(parameters[2])
+                rband = float(parameters[3])
+                wops = float(parameters[4])
+                wband = float(parameters[5])
                 resources = ResourceValues(capacity, rops, rband, wops, wband)
                 objects[id] = Object(id, list(map(int, parameters[6::])), resources)
 
                 for storage in parameters[6::]:
                     storages[int(storage)].add_object_id(id)
+                    storages[int(storage)].set_resources_current(storages[int(storage)].get_resources_current() + resources)
                 continue
 
             if mode == PROPOSAL_MODE:
                 parameters = line.split(' ')
                 id = int(parameters[0])
                 object_id = int(parameters[1])
-                proposal_type = ProposalType.form_id(int(parameters[2]))
+                proposal_type = ProposalType.from_id(int(parameters[2]))
                 priority = float(parameters[3])
 
                 if object_id not in proposals:
@@ -74,7 +74,7 @@ def parse_problem(path: str) -> Problem:
 
 def store_problem(file_name: str, problem: Problem) -> None:
     with open('data_sample/' + file_name + '.txt', 'xt') as file:
-        file.write(STORAGE_MODE)
+        file.write(STORAGE_MODE + '\n')
         for storage in problem.get_storage_list():
             limits = storage.get_resources_limits()
             line: str = ""
@@ -89,9 +89,9 @@ def store_problem(file_name: str, problem: Problem) -> None:
             line += str(limits.get_write_ops())
             line += " "
             line += str(limits.get_write_bandwidth())
-            file.write(line)
+            file.write(line + '\n')
 
-        file.write(OBJECT_MODE)
+        file.write(OBJECT_MODE + '\n')
         for object in problem.get_object_list():
             ressources = object.get_resources_values()
             line: str = ""
@@ -108,18 +108,18 @@ def store_problem(file_name: str, problem: Problem) -> None:
             line += str(ressources.get_write_bandwidth())
             line += " "
             line += " ".join(map(str, object.get_storages_ids()))
-            file.write(line)
+            file.write(line + '\n')
 
-        file.write(PROPOSAL_MODE)
+        file.write(PROPOSAL_MODE + '\n')
         for proposal in problem.get_proposals_list():
             line: str = ""
             line += str(proposal.get_id())
             line += " "
             line += str(proposal.get_object_id())
             line += " "
-            line += str(proposal.get_proposal_type())
+            line += str(proposal.get_proposal_type()._value_)
             line += " "
             line += str(proposal.get_priority())
             line += " "
             line += " ".join(map(str, proposal.get_proposed_storages()))
-            file.write(line)
+            file.write(line + '\n')

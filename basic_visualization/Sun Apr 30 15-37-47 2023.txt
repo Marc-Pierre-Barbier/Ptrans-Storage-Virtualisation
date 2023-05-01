@@ -1,0 +1,4 @@
+Number of OBJECTS : 30000 - Number of STORAGES: 100
+---------------------
+Presence matrix indicating (object, storage) when object is in storage (using indexes)
+

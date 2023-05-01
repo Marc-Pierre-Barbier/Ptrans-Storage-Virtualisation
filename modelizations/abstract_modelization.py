@@ -1,4 +1,4 @@
-from modelizations.basic_modelization import *
+from modelizations.basic_modelization import Problem, Proposal
 
 
 LIMITS: dict[int, tuple[str, float]] = {

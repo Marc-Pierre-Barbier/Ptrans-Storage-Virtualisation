@@ -1,4 +1,4 @@
-from solvers.solver import Solver
+'''from solvers.solver import Solver
 from ortools.linear_solver import pywraplp
 from modelizations.abstract_modelization import *
 
@@ -73,8 +73,7 @@ class AssignmentORToolsSolver(Solver):
         status = solver.Solve()
 
         if status != pywraplp.Solver.OPTIMAL:
-            return("Error : the problem cannot be solved.")
-
+            return "Error : the problem cannot be solved."
 
         items: list[Item] = []
         volumes: list[Volume] = []
@@ -138,3 +137,4 @@ class AssignmentORToolsSolver(Solver):
         print(f'Total packed weight: {total_weight}')"""
 
         self.set_solved_problem(ProblemInstance(volumes, items))
+'''

@@ -4,7 +4,7 @@ import numpy as np
 import random
 
 
-class File_generator:
+class FileGenerator:
     capacity_max: ResourceValues
     capacity_min: ResourceValues
     average: ResourceValues
@@ -42,7 +42,7 @@ class File_generator:
         )
 
 
-class Server_generator:
+class ServerGenerator:
     # a which point we define if a storage is overfilled
     overfilled_max: ResourceValues
     overfilled_min: ResourceValues
@@ -119,7 +119,7 @@ def get_ssd_server():
         50000,
         491300000,
     )
-    return Server_generator(capacity, 0.1, 0.95, 0.90, 0.5, 0.1)
+    return ServerGenerator(capacity, 0.1, 0.95, 0.90, 0.5, 0.1)
 
 
 def get_hdd_server():
@@ -130,7 +130,7 @@ def get_hdd_server():
         320,
         291300000,
     )
-    return Server_generator(capacity, 0.1, 0.95, 0.9, 0.5, 0.1)
+    return ServerGenerator(capacity, 0.1, 0.95, 0.9, 0.5, 0.1)
 
 
 class ProblemGenerator:
@@ -138,10 +138,10 @@ class ProblemGenerator:
     server_count: int
     proposal_count: int
     # Generator : weight the weight define the probability of using this generator
-    server_repartition: list[tuple[Server_generator, int]]
-    file_generator: File_generator
+    server_repartition: list[tuple[ServerGenerator, int]]
+    file_generator: FileGenerator
 
-    def __init__(self, file_count: int, server_count: int, proposal_count: int, server_repartition: list[tuple[Server_generator, int]], file_generator: File_generator) -> None:
+    def __init__(self, file_count: int, server_count: int, proposal_count: int, server_repartition: list[tuple[ServerGenerator, int]], file_generator: FileGenerator) -> None:
         self.file_count = file_count
         self.server_count = server_count
         self.server_repartition = server_repartition
@@ -168,12 +168,12 @@ class ProblemGenerator:
             for server in self.server_repartition:
                 index -= server[1]
                 if index < 0:
-                    target_generator: Server_generator = server[0]
+                    target_generator: ServerGenerator = server[0]
                     break
 
             capacity, _ = target_generator.generate_server()
 
-            storage = Storage(id, False, [], capacity, ResourceValues(0, 0, 0, 0, 0))
+            storage = Storage(id, [], capacity, ResourceValues(0, 0, 0, 0, 0))
             servers.append(storage)
             server_dict[id] = storage
 
@@ -241,7 +241,7 @@ if __name__ == "__main__":
         5000000
     )
 
-    file_generator = File_generator(file_max, 0.1, 0.2, 0.5)
+    file_generator = FileGenerator(file_max, 0.1, 0.2, 0.5)
 
     generator = ProblemGenerator(300, 10000, 100, [tuple([get_ssd_server(), 20]), tuple([get_hdd_server(), 100])], file_generator)
     problem = generator.generate()

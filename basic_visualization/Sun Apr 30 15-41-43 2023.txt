@@ -1,0 +1,139 @@
+Number of OBJECTS : 30000 - Number of STORAGES: 100
+---------------------
+Presence matrix indicating (object, storage) when object is in storage (using indexes)
+
+OBJECT 0
+---
+
+Capacity: 10583403665.00
+Read Ops: 1837726188.00
+Read Bandwidth: 991.00
+Write Ops: 5221197.00
+Write Bandwidth: 942.00
+
+---------
+STORAGE 0
+---
+Capacity: 0.00 / 29727995077659.00 (0.00)
+Read Ops: 0.00 / 4732857515663.00 (0.00)
+Read Bandwidth: 0.00 / 51482.00 (0.00)
+Write Ops: 0.00 / 534533726.00 (0.00)
+Write Bandwidth: 0.00 / 54579.00 (0.00)
+STORAGE 58
+---
+Capacity: 0.00 / 29697723401926.00 (0.00)
+Read Ops: 0.00 / 6919334773489.00 (0.00)
+Read Bandwidth: 0.00 / 47358.00 (0.00)
+Write Ops: 0.00 / 481322422.00 (0.00)
+Write Bandwidth: 0.00 / 48857.00 (0.00)
+
+
+
+---------------------
+
+
+OBJECT 1
+---
+
+Capacity: 10977843140.00
+Read Ops: 1585242212.00
+Read Bandwidth: 1031.00
+Write Ops: 5257370.00
+Write Bandwidth: 953.00
+
+---------
+STORAGE 77
+---
+Capacity: 0.00 / 32143582906421.00 (0.00)
+Read Ops: 0.00 / 5886247829894.00 (0.00)
+Read Bandwidth: 0.00 / 51087.00 (0.00)
+Write Ops: 0.00 / 472077723.00 (0.00)
+Write Bandwidth: 0.00 / 48899.00 (0.00)
+STORAGE 11
+---
+Capacity: 0.00 / 27279915638896.00 (0.00)
+Read Ops: 0.00 / 4281578689355.00 (0.00)
+Read Bandwidth: 0.00 / 49926.00 (0.00)
+Write Ops: 0.00 / 518831215.00 (0.00)
+Write Bandwidth: 0.00 / 51458.00 (0.00)
+
+
+
+---------------------
+
+
+OBJECT 2
+---
+
+Capacity: 10168462659.00
+Read Ops: 1682833526.00
+Read Bandwidth: 1088.00
+Write Ops: 5229137.00
+Write Bandwidth: 992.00
+
+---------
+STORAGE 60
+---
+Capacity: 0.00 / 30193666554177.00 (0.00)
+Read Ops: 0.00 / 4362117423281.00 (0.00)
+Read Bandwidth: 0.00 / 51076.00 (0.00)
+Write Ops: 0.00 / 489790947.00 (0.00)
+Write Bandwidth: 0.00 / 51041.00 (0.00)
+STORAGE 0
+---
+Capacity: 0.00 / 29727995077659.00 (0.00)
+Read Ops: 0.00 / 4732857515663.00 (0.00)
+Read Bandwidth: 0.00 / 51482.00 (0.00)
+Write Ops: 0.00 / 534533726.00 (0.00)
+Write Bandwidth: 0.00 / 54579.00 (0.00)
+
+
+
+---------------------
+
+
+STORAGE 0
+---
+Capacity: 0.00 / 29727995077659.00 (0.00)
+Read Ops: 0.00 / 4732857515663.00 (0.00)
+Read Bandwidth: 0.00 / 51482.00 (0.00)
+Write Ops: 0.00 / 534533726.00 (0.00)
+Write Bandwidth: 0.00 / 54579.00 (0.00)
+
+---------
+
+
+
+---------------------
+
+
+STORAGE 1
+---
+Capacity: 0.00 / 125702199730616.00 (0.00)
+Read Ops: 0.00 / 24608348355617.00 (0.00)
+Read Bandwidth: 0.00 / 313.00 (0.00)
+Write Ops: 0.00 / 293316070.00 (0.00)
+Write Bandwidth: 0.00 / 314.00 (0.00)
+
+---------
+
+
+
+---------------------
+
+
+STORAGE 2
+---
+Capacity: 0.00 / 125090656224428.00 (0.00)
+Read Ops: 0.00 / 24452264235668.00 (0.00)
+Read Bandwidth: 0.00 / 290.00 (0.00)
+Write Ops: 0.00 / 292857853.00 (0.00)
+Write Bandwidth: 0.00 / 319.00 (0.00)
+
+---------
+
+
+
+---------------------
+
+
