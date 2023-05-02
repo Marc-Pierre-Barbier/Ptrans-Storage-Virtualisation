@@ -1,9 +1,11 @@
 from math import isclose, log, sqrt
+from typing import Callable
 import numpy as np
 from modelizations.basic_modelization import Problem, ResourceValues, Storage
 
 
-def absolute_deviation(list: list[int], mean: float) -> float:
+def absolute_deviation(list: list[float]) -> float:
+    mean = float(np.mean(list))
     dev = 0
     for i in list:
         dev = dev + abs(i - mean)
@@ -39,7 +41,7 @@ def moy_ecart_type(list: list[float]) -> tuple[float, float, float]:
     return (avg, var, sqrt(var))
 
 
-def problem_entropy(problem: Problem) -> ResourceValues:
+def problem_agregator(problem: Problem, algorithm: Callable[[list[float]], float]) -> ResourceValues:
     if len(problem.get_storages()) <= 1:
         return ResourceValues(0, 0, 0, 0, 0)
 
@@ -71,18 +73,26 @@ def problem_entropy(problem: Problem) -> ResourceValues:
     r_bandwidth = list(map(get_r_bandwidth, ressources))
 
     return ResourceValues(
-        entropy(capacities),
-        entropy(w_iops),
-        entropy(r_iops),
-        entropy(w_bandwidth),
-        entropy(r_bandwidth)
+        algorithm(capacities),
+        algorithm(w_iops),
+        algorithm(r_iops),
+        algorithm(w_bandwidth),
+        algorithm(r_bandwidth)
     )
 
 
-def problem_stats(problem: Problem) -> None:
-    if len(problem.get_storages()) <= 1:
-        return
+class Stats:
+    mean: float = 0
+    var: float = 0
+    dev: float = 0
 
+    def __init__(self, mean: float, var: float, dev: float) -> None:
+        self.mean = mean
+        self.var = var
+        self.dev = dev
+
+
+def problem_stats(problem: Problem) -> dict[str, Stats]:
     def get_ressources(storage: Storage):
         return storage.get_resources_current() / storage.get_resources_limits()
 
@@ -103,31 +113,46 @@ def problem_stats(problem: Problem) -> None:
 
     ressources = list(map(get_ressources, problem.get_storage_list()))
 
+    results: dict[str, Stats] = {}
+
     # calcule de l'entropie
     capacities = list(map(get_capacity, ressources))
     r_capacities = moy_ecart_type(capacities)
-    print("Capacite: AVG=%.4f VAR=%.4f ECType=%.4f" % (r_capacities[0], r_capacities[1], r_capacities[2]))
+    results["capacity"] = Stats(r_capacities[0], r_capacities[1], r_capacities[2])
 
     w_iops = list(map(get_w_iops, ressources))
     r_w_iops = moy_ecart_type(w_iops)
-    print("W_IOPS: AVG=%.4f VAR=%.4f ECType=%.4f" % (r_w_iops[0], r_w_iops[1], r_w_iops[2]))
+    results["w_iops"] = Stats(r_w_iops[0], r_w_iops[1], r_w_iops[2])
 
     r_iops = list(map(get_r_iops, ressources))
     r_r_iops = moy_ecart_type(r_iops)
-    print("R_IOPS: AVG=%.4f VAR=%.4f ECType=%.4f" % (r_r_iops[0], r_r_iops[1], r_r_iops[2]))
+    results["r_iops"] = Stats(r_r_iops[0], r_r_iops[1], r_r_iops[2])
 
     w_bandwidth = list(map(get_w_bandwidth, ressources))
     r_w_bandwidth = moy_ecart_type(w_bandwidth)
-    print("W_Bandwidth: AVG=%.4f VAR=%.4f ECType=%.4f" % (r_w_bandwidth[0], r_w_bandwidth[1], r_w_bandwidth[2]))
+    results["w_bandwidth"] = Stats(r_w_bandwidth[0], r_w_bandwidth[1], r_w_bandwidth[2])
 
     r_bandwidth = list(map(get_r_bandwidth, ressources))
     r_r_bandwidth = moy_ecart_type(r_bandwidth)
-    print("R_Bandwidth: AVG=%.4f VAR=%.4f ECType=%.4f" % (r_r_bandwidth[0], r_r_bandwidth[1], r_r_bandwidth[2]))
+    results["r_bandwidth"] = Stats(r_r_bandwidth[0], r_r_bandwidth[1], r_r_bandwidth[2])
+
+    return results
 
 
-def evaluate(problem: Problem):
-    entropy = problem_entropy(problem)
-    print("===== ENTROPY (lower is better) =====")
-    print(entropy)
-    print("===== STATS =====")
-    problem_stats(problem)
+class evaluation:
+    entropy: ResourceValues
+    abs_deviation: ResourceValues
+    stats: dict[str, Stats]
+
+    def __init__(self, entropy: ResourceValues, abs_deviation: ResourceValues, stats: dict[str, Stats]) -> None:
+        self.entropy = entropy
+        self.abs_deviation = abs_deviation
+        self.stats = stats
+
+
+def evaluate(problem: Problem) -> evaluation:
+    entropy_result = problem_agregator(problem, entropy)
+    deviation_result = problem_agregator(problem, absolute_deviation)
+    stats = problem_stats(problem)
+
+    return evaluation(entropy_result, deviation_result, stats)
