@@ -3,6 +3,8 @@ from modelizations.basic_modelization import Object, Proposal, ProposalType, Res
 import numpy as np
 import random
 
+from validator import check_problem
+
 
 class FileGenerator:
     capacity_max: ResourceValues
@@ -194,6 +196,7 @@ class ProblemGenerator:
                 index = random.randint(1, len(available_servers)) - 1
                 if available_servers[index].get_resources_current() + file.get_resources_values() < available_servers[index].get_resources_limits():
                     available_servers[index].add_object_id(file.get_id())
+                    available_servers[index].set_resources_current(available_servers[index].get_resources_current() + file.get_resources_values())
                     file.get_storages_ids().append(available_servers[index].get_id())
                 available_servers.pop(index)
 
@@ -229,7 +232,9 @@ class ProblemGenerator:
             except Exception:
                 available_files.pop(file_index)
 
-        return Problem(self.server_count, server_dict, self.file_count, files_dict, proposal_dict)
+        prob = Problem(self.server_count, server_dict, self.file_count, files_dict, proposal_dict)
+        check_problem(prob)
+        return prob
 
 
 if __name__ == "__main__":

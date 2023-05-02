@@ -1,7 +1,9 @@
 from math import isclose, log, sqrt
+import os
 from typing import Callable
 import numpy as np
 from modelizations.basic_modelization import Problem, ResourceValues, Storage
+from modelizations.parser import parse_problem
 
 
 def absolute_deviation(list: list[float]) -> float:
@@ -156,3 +158,16 @@ def evaluate(problem: Problem) -> evaluation:
     stats = problem_stats(problem)
 
     return evaluation(entropy_result, deviation_result, stats)
+
+
+# to use this function you need to provide a scoring function, look in scoring.py
+def batch_evaluate(solver: Callable[[Problem], Problem], monoscore: Callable[[evaluation], int]):
+    evals: list[evaluation] = []
+
+    for file in os.scandir("data_sample"):
+        if file.name.endswith("txt"):
+            prob: Problem = parse_problem(file.path)
+            evals.append(evaluate(solver(prob)))
+
+    for eval in evals:
+        print(monoscore(eval))
