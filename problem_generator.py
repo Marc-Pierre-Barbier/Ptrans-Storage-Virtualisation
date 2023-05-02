@@ -1,63 +1,253 @@
-from copy import copy
-from typing import List
-from modelization import Problem, Storage, Proposal, ResourceValues, Object
+import copy
+from modelizations.basic_modelization import Object, Proposal, ProposalType, ResourceValues, Storage, Problem
+import numpy as np
 import random
 
-# TODO: pour des raison évidente on peut pas finir sa
-
-# nombre de server par objet
-SPEAD = 2
+from validator import check_problem
 
 
-def generate_ressources_from_storages(storages: list[Storage]) -> ResourceValues:
-    # generate a usage between 0 and 1
-    return storages[0].get_resources_current() * (random.randint(0, 50000) / 50000.)
+class FileGenerator:
+    capacity_max: ResourceValues
+    capacity_min: ResourceValues
+    average: ResourceValues
+    spread: float
 
+    def __init__(self, capacity_max: ResourceValues, capacity_min: ResourceValues | float, average: ResourceValues | float, spread: float) -> None:
+        if isinstance(capacity_min, ResourceValues) and isinstance(average, ResourceValues):
+            self._constructorA(capacity_max, capacity_min, average, spread)
+        elif isinstance(capacity_min, int | float) and isinstance(average, int | float):
+            self._constructorB(capacity_max, capacity_min, average, spread)
+        else:
+            raise Exception('Invalid parameters')
 
-# usage from 0 to 100
-def generate_problem(server_count: int, usage: int, proposals_count: int) -> Problem:
-    storages: List[Storage] = []
-    proposals: List[Proposal] = []
+    def _constructorA(self, capacity_max: ResourceValues, capacity_min: ResourceValues, average: ResourceValues, spread: float):
+        self.capacity_max = capacity_max
+        self.capacity_min = capacity_min
+        self.average = average
+        self.spread = spread
 
-    for _ in range(server_count):
-        limit = ResourceValues(
-            random.randint(10000, 10000000),
-            random.randint(100, 10000),
-            random.randint(1, 100),
-            random.randint(100, 10000),
-            random.randint(1, 100)
+    def _constructorB(self, capacity_max: ResourceValues, capacity_min: float, average: float, spread: float):
+        self.capacity_max = capacity_max
+        self.capacity_min = capacity_max * capacity_min
+        self.average = capacity_max * average
+        self.spread = spread
+
+    def generate_file(self):
+        delta = self.capacity_max - self.capacity_min
+
+        return ResourceValues(
+            int(abs(np.random.normal(loc=delta.get_capacity(), scale=self.spread * self.capacity_min.get_capacity()))) + self.capacity_min.get_capacity(),
+            int(abs(np.random.normal(loc=delta.get_read_bandwidth(), scale=self.spread * self.capacity_min.get_read_bandwidth()))) + self.capacity_min.get_read_bandwidth(),
+            int(abs(np.random.normal(loc=delta.get_read_ops(), scale=self.spread * self.capacity_min.get_read_ops()))) + self.capacity_min.get_read_ops(),
+            int(abs(np.random.normal(loc=delta.get_write_bandwidth(), scale=self.spread * self.capacity_min.get_write_bandwidth()))) + self.capacity_min.get_write_bandwidth(),
+            int(abs(np.random.normal(loc=delta.get_write_ops(), scale=self.spread * self.capacity_min.get_write_ops()))) + self.capacity_min.get_write_ops()
         )
-        current = copy(limit)
-        usage /= 100
-        current._capacity *= usage
-        current._read_ops *= usage
-        current._capacity *= usage
-        current._read_bandwidth *= usage
-        current._write_bandwidth *= usage
-        current._write_ops *= usage
-        storages.append(Storage(False, current, limit))
 
-    for _ in range(proposals_count):
-        original_storages: List[Storage] = []
-        new_storages: List[Storage] = []
 
-        while len(original_storages) != SPEAD:
-            storage_id = random.randint(0, len(storages) - 1)
-            if storages[storage_id] not in original_storages:
-                original_storages.append(storages[storage_id])
+class ServerGenerator:
+    # a which point we define if a storage is overfilled
+    overfilled_max: ResourceValues
+    overfilled_min: ResourceValues
+    overfilled_spread: float
 
-        while len(new_storages) != SPEAD:
-            storage_id = random.randint(0, len(storages) - 1)
-            if storages[storage_id] not in new_storages:
-                new_storages.append(storages[storage_id])
+    # actual capacity range
+    capacity_max: ResourceValues
+    capacity_min: ResourceValues
+    capacity_spread: float
 
-        values = generate_ressources_from_storages(original_storages)
+    def __init__(self, capacity_max: ResourceValues, capacity_min: ResourceValues | int | float, overfilled_max: ResourceValues | int | float, overfilled_min: ResourceValues | int | float, capacity_spread: float, overfilled_spread: float) -> None:
+        if isinstance(capacity_min, ResourceValues) and isinstance(overfilled_max, ResourceValues) and isinstance(overfilled_min, ResourceValues):
+            self._constructorA(capacity_max, capacity_min, overfilled_max, overfilled_min, capacity_spread, overfilled_spread)
+        elif isinstance(capacity_min, int | float) and isinstance(overfilled_max, int | float) and isinstance(overfilled_min, int | float):
+            self._constructorB(capacity_max, capacity_min, overfilled_max, overfilled_min, capacity_spread, overfilled_spread)
+        else:
+            raise Exception('Invalid parameters')
 
-        original_object = Object(original_storages, values)
-        new_object = Object(new_storages, values)
+    def _constructorB(self, capacity_max: ResourceValues, capacity_min: int | float, overfilled_max: int | float, overfilled_min: int | float, capacity_spread: float, overfilled_spread: float):
+        if capacity_min > 1 or capacity_min < 0:
+            raise Exception('Invalid capacity limit')
 
-        proposals.append(Proposal(
-            original_object, new_object, 2
-        ))
+        if overfilled_max > 1 or overfilled_max < 0 or overfilled_min > 1 or overfilled_min < 0:
+            raise Exception('Invalid overfill specifications')
 
-    return Problem(storages, proposals)
+        self.capacity_spread = capacity_spread
+        self.overfilled_spread = overfilled_spread
+        self.capacity_max = capacity_max
+        self.capacity_min = capacity_max * capacity_min
+        self.overfilled_max = capacity_max * overfilled_max
+        self.overfilled_min = capacity_max * overfilled_min
+
+    def _constructorA(self, capacity_max: ResourceValues, capacity_min: ResourceValues | None, overfilled_max: ResourceValues | None, overfilled_min: ResourceValues | None, capacity_spread: float, overfilled_spread: float):
+        self.capacity_spread = capacity_spread
+        self.overfilled_spread = overfilled_spread
+        self.capacity_max = capacity_max
+        self.capacity_min = capacity_min if capacity_min is not None else capacity_max
+        self.overfilled_max = overfilled_max if overfilled_max is not None else capacity_max
+        self.overfilled_min = overfilled_min if overfilled_min is not None else capacity_max
+
+    def generate_server(self) -> tuple[ResourceValues, ResourceValues]:
+        delta = self.capacity_max - self.capacity_min
+
+        capacity = ResourceValues(
+            int(abs(np.random.normal(loc=delta.get_capacity(), scale=self.capacity_spread * self.capacity_min.get_capacity()))) + self.capacity_min.get_capacity(),
+            int(abs(np.random.normal(loc=delta.get_read_bandwidth(), scale=self.capacity_spread * self.capacity_min.get_read_bandwidth()))) + self.capacity_min.get_read_bandwidth(),
+            int(abs(np.random.normal(loc=delta.get_read_ops(), scale=self.capacity_spread * self.capacity_min.get_read_ops()))) + self.capacity_min.get_read_ops(),
+            int(abs(np.random.normal(loc=delta.get_write_bandwidth(), scale=self.capacity_spread * self.capacity_min.get_write_bandwidth()))) + self.capacity_min.get_write_bandwidth(),
+            int(abs(np.random.normal(loc=delta.get_write_ops(), scale=self.capacity_spread * self.capacity_min.get_write_ops()))) + self.capacity_min.get_write_ops()
+        )
+
+        delta: ResourceValues = self.overfilled_max - self.overfilled_min
+
+        overfilled = ResourceValues(
+            int(abs(np.random.normal(loc=delta.get_capacity(), scale=self.overfilled_spread * self.overfilled_min.get_capacity()))) + self.overfilled_min.get_capacity(),
+            int(abs(np.random.normal(loc=delta.get_read_bandwidth(), scale=self.overfilled_spread * self.overfilled_min.get_read_bandwidth()))) + self.overfilled_min.get_read_bandwidth(),
+            int(abs(np.random.normal(loc=delta.get_read_ops(), scale=self.overfilled_spread * self.overfilled_min.get_read_ops()))) + self.overfilled_min.get_read_ops(),
+            int(abs(np.random.normal(loc=delta.get_write_bandwidth(), scale=self.overfilled_spread * self.overfilled_min.get_write_bandwidth()))) + self.overfilled_min.get_write_bandwidth(),
+            int(abs(np.random.normal(loc=delta.get_write_ops(), scale=self.overfilled_spread * self.overfilled_min.get_write_ops()))) + self.overfilled_min.get_write_ops()
+        )
+
+        return tuple([capacity, overfilled])
+
+
+# Server archetypes presets
+# i just assumed that all servers are single drive for the sake of simplicity
+# it can be modified by using max *= (count)
+def get_ssd_server():
+    # Benchmark of my Corsair MP400:
+    capacity = ResourceValues(
+        30000000000000,
+        50000,
+        3400000000,
+        50000,
+        491300000,
+    )
+    return ServerGenerator(capacity, 0.1, 0.95, 0.90, 0.5, 0.1)
+
+
+def get_hdd_server():
+    capacity = ResourceValues(
+        120000000000000,
+        320,
+        400000000,
+        320,
+        291300000,
+    )
+    return ServerGenerator(capacity, 0.1, 0.95, 0.9, 0.5, 0.1)
+
+
+class ProblemGenerator:
+    file_count: int
+    server_count: int
+    proposal_count: int
+    # Generator : weight the weight define the probability of using this generator
+    server_repartition: list[tuple[ServerGenerator, int]]
+    file_generator: FileGenerator
+
+    def __init__(self, file_count: int, server_count: int, proposal_count: int, server_repartition: list[tuple[ServerGenerator, int]], file_generator: FileGenerator) -> None:
+        self.file_count = file_count
+        self.server_count = server_count
+        self.server_repartition = server_repartition
+        self.file_generator = file_generator
+        self.proposal_count = proposal_count
+
+    def generate(self):
+        servers: list[Storage] = []
+        server_dict: dict[int, Storage] = {}
+        files: list[Object] = []
+        files_dict: dict[int, Object] = {}
+        proposal_dict: dict[int, list[Proposal]] = {}
+        proposals: list[Proposal] = []
+
+        # Generating servers
+        wheight_total = 0
+        for _generator, weight in self.server_repartition:
+            wheight_total += weight
+
+        for id in range(self.server_count):
+            index = random.randint(1, wheight_total)
+
+            target_generator = self.server_repartition[0][0]
+            for server in self.server_repartition:
+                index -= server[1]
+                if index < 0:
+                    target_generator: ServerGenerator = server[0]
+                    break
+
+            capacity, _ = target_generator.generate_server()
+
+            storage = Storage(id, [], capacity, ResourceValues(0, 0, 0, 0, 0))
+            servers.append(storage)
+            server_dict[id] = storage
+
+        # Generating files
+        for id in range(self.file_count):
+            file_size = self.file_generator.generate_file()
+            new_file = Object(id, [], file_size)
+            files.append(new_file)
+            files_dict[id] = new_file
+
+        # Binding the files and servers
+        for file in files:
+            available_servers = copy.copy(servers)
+            while len(file.get_storages_ids()) < 2:
+                if len(available_servers) == 0:
+                    raise Exception('No enough server for the numbers and size of the files')
+
+                index = random.randint(1, len(available_servers)) - 1
+                if available_servers[index].get_resources_current() + file.get_resources_values() < available_servers[index].get_resources_limits():
+                    available_servers[index].add_object_id(file.get_id())
+                    available_servers[index].set_resources_current(available_servers[index].get_resources_current() + file.get_resources_values())
+                    file.get_storages_ids().append(available_servers[index].get_id())
+                available_servers.pop(index)
+
+        available_files = copy.copy(files)
+
+        # Generating proposals
+        while len(proposals) < self.proposal_count:
+            print(len(proposals))
+            file_index = 0
+            try:
+                file_index = random.randint(0, len(available_files) - 1)
+                current_file = available_files[file_index]
+                current_id = current_file.get_id()
+
+                proposed_storages: list[int] = []
+                available_servers = copy.copy(servers)
+
+                while len(proposed_storages) < 2:
+                    if len(available_servers) == 0:
+                        raise Exception('No enough server for the numbers and size of the files')
+
+                    index = random.randint(0, len(available_servers) - 1)
+                    if available_servers[index].get_resources_current() + current_file.get_resources_values() < available_servers[index].get_resources_limits():
+                        proposed_storages.append(available_servers[index].get_id())
+                    available_servers.pop(index)
+
+                if current_id not in proposal_dict:
+                    proposal_dict[current_id] = []
+
+                proposal = Proposal(current_id, current_file.get_id(), proposed_storages, ProposalType.MOVE, 0)
+                proposal_dict[current_id].append(proposal)
+                proposals.append(proposal)
+            except Exception:
+                available_files.pop(file_index)
+
+        prob = Problem(self.server_count, server_dict, self.file_count, files_dict, proposal_dict)
+        check_problem(prob)
+        return prob
+
+
+if __name__ == "__main__":
+    file_max = ResourceValues(
+        10000000000,
+        1000,
+        10000000,
+        1000,
+        5000000
+    )
+
+    file_generator = FileGenerator(file_max, 0.1, 0.2, 0.5)
+
+    generator = ProblemGenerator(300, 10000, 100, [tuple([get_ssd_server(), 20]), tuple([get_hdd_server(), 100])], file_generator)
+    problem = generator.generate()
+    print(problem)

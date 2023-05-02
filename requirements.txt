@@ -1,1 +1,6 @@
 ortools
+bisect
+functools
+numpy
+itertools
+enum
