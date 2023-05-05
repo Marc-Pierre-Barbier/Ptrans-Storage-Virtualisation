@@ -204,7 +204,6 @@ class ProblemGenerator:
 
         # Generating proposals
         while len(proposals) < self.proposal_count:
-            print(len(proposals))
             file_index = 0
             try:
                 file_index = random.randint(0, len(available_files) - 1)
@@ -248,6 +247,5 @@ if __name__ == "__main__":
 
     file_generator = FileGenerator(file_max, 0.1, 0.2, 0.5)
 
-    generator = ProblemGenerator(300, 10000, 100, [tuple([get_ssd_server(), 20]), tuple([get_hdd_server(), 100])], file_generator)
+    generator = ProblemGenerator(300, 10000, 100, [tuple([get_ssd_server(), 20]), tuple([get_hdd_server(), 100])], file_generator)  # type: ignore
     problem = generator.generate()
-    print(problem)
