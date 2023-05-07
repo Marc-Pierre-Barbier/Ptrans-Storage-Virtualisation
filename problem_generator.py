@@ -226,7 +226,7 @@ class ProblemGenerator:
                 if current_id not in proposal_dict:
                     proposal_dict[current_id] = []
 
-                proposal = Proposal(current_id, current_file.get_id(), proposed_storages, ProposalType.MOVE, 0)
+                proposal = Proposal(current_id, current_file, proposed_storages, ProposalType.MOVE, 0)
                 proposal_dict[current_id].append(proposal)
                 proposals.append(proposal)
             except Exception:

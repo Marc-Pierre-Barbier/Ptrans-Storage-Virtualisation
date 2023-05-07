@@ -1,4 +1,4 @@
-from modelizations.basic_modelization import Problem, Proposal
+from modelizations.basic_modelization import Problem, Proposal, ProposalType
 
 
 LIMITS: dict[int, tuple[str, float]] = {
@@ -84,3 +84,18 @@ class ProblemInstance:
 
     def get_proposals(self) -> list[Proposal]:
         return self._proposals
+
+    def get_proposals_move_then_add_then_delete(self) -> tuple[list[Proposal], list[Proposal], list[Proposal]]:
+        move_proposals = []
+        add_proposals = []
+        delete_proposals = []
+
+        for proposal in self.get_proposals():
+            if proposal.get_proposal_type() == ProposalType.ADD:
+                add_proposals.append(proposal)
+            elif proposal.get_proposal_type() == ProposalType.MOVE:
+                move_proposals.append(proposal)
+            elif proposal.get_proposal_type() == ProposalType.DELETE:
+                delete_proposals.append(proposal)
+
+        return move_proposals, add_proposals, delete_proposals

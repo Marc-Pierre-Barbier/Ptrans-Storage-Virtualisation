@@ -154,12 +154,13 @@ class Object:
 
 
 class Proposal:
-    def __init__(self, id: int, object_id: int, proposed_storages: list[int], proposal_type: ProposalType, priority: float) -> None:
+    def __init__(self, id: int, object: Object, proposed_storages: list[int], proposal_type: ProposalType, priority: float) -> None:
         self._id = id
-        self._object_id = object_id
+        self._object_id = object.get_id()
         self._proposed_storages = proposed_storages
         self._proposal_type = proposal_type
         self._priority = priority
+        self._original_storages = object.get_storages_ids()
 
     def get_id(self) -> int:
         return self._id
@@ -169,6 +170,12 @@ class Proposal:
 
     def get_item_id(self) -> int:
         return self._object_id
+
+    def get_original_storages(self) -> list[int]:
+        return self._original_storages
+
+    def get_original_volumes(self) -> list[int]:
+        return self._original_storages
 
     def get_proposed_storages(self) -> list[int]:
         return self._proposed_storages

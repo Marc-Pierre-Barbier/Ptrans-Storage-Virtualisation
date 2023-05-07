@@ -64,7 +64,7 @@ def parse_problem(path: str) -> Problem:
                 if object_id not in proposals:
                     proposals[object_id] = []
 
-                proposals[object_id].append(Proposal(id, object_id, list(map(int, parameters[4::])), proposal_type, priority))
+                proposals[object_id].append(Proposal(id, objects[object_id], list(map(int, parameters[4::])), proposal_type, priority))
 
         object_max: int = functools.reduce(lambda a, b: a if a > b else b, list(objects.keys()))
         storage_max: int = functools.reduce(lambda a, b: a if a > b else b, list(proposals.keys()))
