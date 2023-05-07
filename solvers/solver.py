@@ -12,6 +12,9 @@ class Solver:
         self._problem: ProblemInstance = ProblemInstance(self._basic_problem)
         self._proposals_kept: list[int] = []
 
+    def get_problem(self):
+        return self._problem
+
     def set_proposals_kept(self, proposals_kept: list[int]) -> None:
         self._proposals_kept: list[int] = proposals_kept
 

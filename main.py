@@ -1,7 +1,7 @@
 from problem_generator import ProblemGenerator, ResourceValues, FileGenerator, get_hdd_server, get_ssd_server
 from modelizations.basic_modelization import Problem
 from modelizations.parser import store_problem
-from solvers.solver import Solver
+from solvers.proposals_solver import ProposalsSolver, Solver
 
 
 def create_problem():
@@ -24,10 +24,12 @@ def create_problem():
 
 
 def test_problem():
-    solver: Solver = Solver('test')
+    solver: Solver = ProposalsSolver('test')
     return solver
 
 
 if __name__ == "__main__":
-    create_problem()
-    # test_problem()
+    # create_problem()
+    solver = test_problem()
+    solver.solve()
+    solver.update_basic_problem()

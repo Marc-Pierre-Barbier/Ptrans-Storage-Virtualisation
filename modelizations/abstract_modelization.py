@@ -1,4 +1,4 @@
-from modelizations.basic_modelization import Problem, Proposal, ProposalType
+from modelizations.basic_modelization import Problem, Proposal
 
 
 LIMITS: dict[int, tuple[str, float]] = {
@@ -72,30 +72,18 @@ class ProblemInstance:
 
             items[object.get_id()] = Item(object.get_id(), resources, object.get_storages_ids())
 
-        self._volumes: list[Volume] = volumes
-        self._items: list[Item] = items
-        self._proposals: dict[int, Proposal] = basic_problem.get_proposals()
+        self._volumes: dict[int, Volume] = volumes
+        self._items: dict[int, Item] = items
+        self._proposals: dict[int, list[Proposal]] = basic_problem.get_proposals()
 
     def get_volumes(self) -> list[Volume]:
-        return self._volumes
+        return self._volumes.values()
 
     def get_items(self) -> list[Item]:
-        return self._items
+        return self._items.values()
 
     def get_proposals(self) -> list[Proposal]:
-        return self._proposals
-
-    def get_proposals_move_then_add_then_delete(self) -> tuple[list[Proposal], list[Proposal], list[Proposal]]:
-        move_proposals = []
-        add_proposals = []
-        delete_proposals = []
-
-        for proposal in self.get_proposals():
-            if proposal.get_proposal_type() == ProposalType.ADD:
-                add_proposals.append(proposal)
-            elif proposal.get_proposal_type() == ProposalType.MOVE:
-                move_proposals.append(proposal)
-            elif proposal.get_proposal_type() == ProposalType.DELETE:
-                delete_proposals.append(proposal)
-
-        return move_proposals, add_proposals, delete_proposals
+        proposals: list[Proposal] = []
+        for proposals_lists in self._proposals.values():
+            proposals.extend(proposals_lists)
+        return proposals
