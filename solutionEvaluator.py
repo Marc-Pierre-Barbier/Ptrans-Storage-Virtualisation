@@ -8,7 +8,7 @@ from modelizations.parser import parse_problem
 
 def absolute_deviation(list: list[float]) -> float:
     mean = float(np.mean(list))
-    dev = 0
+    dev: float = 0
     for i in list:
         dev = dev + abs(i - mean)
     return dev
@@ -161,7 +161,7 @@ def evaluate(problem: Problem) -> evaluation:
 
 
 # to use this function you need to provide a scoring function, look in scoring.py
-def batch_evaluate(solver: Callable[[Problem], Problem], monoscore: Callable[[evaluation], int]):
+def batch_evaluate(solver: Callable[[Problem], Problem], monoscore: Callable[[evaluation], int], print_score: bool = True):
     evals: list[evaluation] = []
 
     for file in os.scandir("data_sample"):
@@ -169,5 +169,9 @@ def batch_evaluate(solver: Callable[[Problem], Problem], monoscore: Callable[[ev
             prob: Problem = parse_problem(file.path)
             evals.append(evaluate(solver(prob)))
 
-    for eval in evals:
-        print(monoscore(eval))
+    if print_score:
+        for eval in evals:
+            print(monoscore(eval))
+
+    # return for automations
+    return monoscore
