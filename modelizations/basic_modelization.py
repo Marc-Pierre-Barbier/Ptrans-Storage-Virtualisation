@@ -228,18 +228,19 @@ class Problem:
 
     def update_modelization(self, proposals_kept: list[int]) -> None:
         for proposal_id in proposals_kept:
-            proposal: Proposal = self.get_proposals()[proposal_id]
-            object: Object = self.get_objects()[proposal.get_object_id()]
+            proposals: list[Proposal] = self.get_proposals()[proposal_id]
+            for proposal in proposals:
+                object: Object = self.get_objects()[proposal.get_object_id()]
 
-            for storage_id in object.get_storages_ids():
-                self.get_storages()[storage_id].remove_object_id(object.get_id())
+                for storage_id in object.get_storages_ids():
+                    self.get_storages()[storage_id].remove_object_id(object.get_id())
 
-            storages_ids: list[int] = proposal.get_proposed_storages()
-            object._storages_id = storages_ids
-            for storage_id in storages_ids:
-                storage: Storage = self.get_storages()[storage_id]
+                storages_ids: list[int] = proposal.get_proposed_storages()
+                object._storages_id = storages_ids
+                for storage_id in storages_ids:
+                    storage: Storage = self.get_storages()[storage_id]
 
-                storage.add_object_id(object.get_id())
+                    storage.add_object_id(object.get_id())
 
     def get_presence_matrix(self) -> np.ndarray:
         presence_matrix = np.full((self.get_object_max_id() + 1, self.get_storage_max_id() + 1), '-       -', 'U9')
@@ -268,13 +269,15 @@ class Problem:
 
 
 class Tracker:
-    def __init__(self, problem: Problem, object: Object, storage: Storage | None, in_depth: bool = False) -> None:
+    def __init__(self, problem: Problem, object: Object | None, storage: Storage | None, in_depth: bool = False) -> None:
         self._problem = problem
         self._object = object
         self._storage = storage
         self._in_depth = in_depth
 
     def track_storage(self) -> str:
+        if self._storage is None:
+            return ""
         header: str = f'STORAGE {self._storage.get_id()}\n---\n'
         if not self._in_depth:
             return header + self._storage.get_full_resources_str()
@@ -285,6 +288,8 @@ class Tracker:
             return header + self._storage.get_full_resources_str() + '\n---------\n' + objects + '\n\n\n---------------------\n\n\n'
 
     def track_object(self) -> str:
+        if self._object is None:
+            return ""
         header: str = f'OBJECT {self._object.get_id()}\n---\n\n'
         if not self._in_depth:
             return header + str(self._object.get_resources_values()) + '\n---\n'

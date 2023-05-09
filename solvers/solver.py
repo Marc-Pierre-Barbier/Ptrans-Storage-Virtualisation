@@ -16,9 +16,10 @@ class Solver:
         return self._problem
 
     def set_proposals_kept(self, proposals_kept: list[int]) -> None:
-        self._proposals_kept: list[int] = proposals_kept
+        self._proposals_kept = proposals_kept
 
     def update_basic_problem(self) -> None:
         self._basic_problem.update_modelization(self._proposals_kept)
-        self._problem: ProblemInstance = ProblemInstance(self._basic_problem)
-        self._proposals_kept: list[int] = []
+        self._basic_problem.log_visualization([0, 1, 2], [0, 1, 2])
+        self._problem = ProblemInstance(self._basic_problem)
+        self._proposals_kept = []
