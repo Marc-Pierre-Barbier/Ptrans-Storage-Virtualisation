@@ -160,16 +160,9 @@ class ProposalsSolver(Solver):
             )
 
         objective = solver.Objective()
-        for volume_id in self.blowup_problem.volumes_ortools_ids:
-            for item_id in self.blowup_problem.items_ortools_ids:
-                objective.SetCoefficient(affectations[item_id, volume_id],
-                                         (self.blowup_problem.items_weight1[item_id] / self.blowup_problem.volumes_capacity1[volume_id])
-                                         * (self.blowup_problem.items_weight2[item_id] / self.blowup_problem.volumes_capacity2[volume_id])
-                                         * (self.blowup_problem.items_weight3[item_id] / self.blowup_problem.volumes_capacity3[volume_id])
-                                         * (self.blowup_problem.items_weight4[item_id] / self.blowup_problem.volumes_capacity4[volume_id]))
 
         for proposal_id in self.blowup_problem.proposals_ortools_ids:
-            objective.SetCoefficient(proposals_kept[proposal_id], )
+            objective.SetCoefficient(proposals_kept[proposal_id], 1)
         objective.SetMinimization()
 
         print('Solver launched')
