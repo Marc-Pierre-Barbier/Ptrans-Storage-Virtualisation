@@ -118,6 +118,7 @@ class ResourceValues:
                 self._write_ops < other._write_ops
         return False
 
+
 class Storage:
     def __init__(self, id: int, objects_ids: list[int], resources_limits: ResourceValues, resources_current: ResourceValues) -> None:
         self._id = id

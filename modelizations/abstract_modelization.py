@@ -13,25 +13,25 @@ LIMITS: dict[int, tuple[str, float]] = {
 class Volume:
     """A basic container class."""
 
-    def __init__(self, id: int, limits: dict[int, int], items: list[int]):
+    def __init__(self, id: int, limits: dict[int, float], items: list[int]):
         self._id = id
-        self._limits: list[int] = limits
+        self._limits: dict[int, float] = limits
         self._items: list[int] = items
 
     def get_id(self) -> int:
         return self._id
 
-    def get_limits(self) -> dict[int, int]:
+    def get_limits(self) -> dict[int, float]:
         return self._limits
 
 
 class Item:
     """A basic object class."""
 
-    def __init__(self, id: int, resources: dict[int, int], volumes: list[int]):
+    def __init__(self, id: int, resources: dict[int, float], volumes: list[int]):
         self._id = id
         self._volumes: list[int] = volumes
-        self._resources: dict[int, int] = resources
+        self._resources: dict[int, float] = resources
 
     def get_id(self) -> int:
         return self._id
@@ -39,7 +39,7 @@ class Item:
     def get_volumes(self) -> list[int]:
         return self._volumes
 
-    def get_resources(self) -> dict[int, int]:
+    def get_resources(self) -> dict[int, float]:
         return self._resources
 
 
@@ -51,7 +51,7 @@ class ProblemInstance:
         items: dict[int, Item] = {}
 
         for storage in basic_problem.get_storages().values():
-            limits: dict[int, int] = {
+            limits: dict[int, float] = {
                 0: storage.get_resources_limits().get_capacity(),
                 1: storage.get_resources_limits().get_read_bandwidth(),
                 2: storage.get_resources_limits().get_read_ops(),
@@ -62,7 +62,7 @@ class ProblemInstance:
             volumes[storage.get_id()] = Volume(storage.get_id(), limits, storage.get_objects_ids())
 
         for object in basic_problem.get_objects().values():
-            resources: dict[int, int] = {
+            resources: dict[int, float] = {
                 0: object.get_resources_values().get_capacity(),
                 1: object.get_resources_values().get_read_bandwidth(),
                 2: object.get_resources_values().get_read_ops(),
@@ -77,13 +77,13 @@ class ProblemInstance:
         self._proposals: dict[int, list[Proposal]] = basic_problem.get_proposals()
 
     def get_volumes(self) -> list[Volume]:
-        return self._volumes.values()
+        return list(self._volumes.values())
 
     def get_items(self) -> list[Item]:
-        return self._items.values()
+        return list(self._items.values())
 
     def get_proposals(self) -> list[Proposal]:
         proposals: list[Proposal] = []
-        for proposals_lists in self._proposals.values():
+        for proposals_lists in list(self._proposals.values()):
             proposals.extend(proposals_lists)
         return proposals
