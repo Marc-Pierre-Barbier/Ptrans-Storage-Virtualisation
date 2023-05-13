@@ -145,7 +145,8 @@ class ProposalsSolver(Solver):
                                          (self.blowup_problem.items_weight1[item_id] / self.blowup_problem.volumes_capacity1[volume_id])
                                          * (self.blowup_problem.items_weight2[item_id] / self.blowup_problem.volumes_capacity2[volume_id])
                                          * (self.blowup_problem.items_weight3[item_id] / self.blowup_problem.volumes_capacity3[volume_id])
-                                         * (self.blowup_problem.items_weight4[item_id] / self.blowup_problem.volumes_capacity4[volume_id]))
+                                         * (self.blowup_problem.items_weight4[item_id] / self.blowup_problem.volumes_capacity4[volume_id])
+                                         * affectations[item_id, volume_id])
         objective.SetMinimization()
 
         print('Solver launched')
