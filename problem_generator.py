@@ -147,9 +147,9 @@ class ProblemGenerator:
     server_repartition: list[tuple[ServerGenerator, int]]
     file_generator: FileGenerator
 
-    def __init__(self, file_count: int, proposal_count: int, server_repartition: list[tuple[ServerGenerator, int]], file_generator: FileGenerator) -> None:
+    def __init__(self, file_count: int, proposal_count: int, server_repartition: list[tuple[ServerGenerator | int]], file_generator: FileGenerator) -> None:
         self.file_count = file_count
-        self.server_repartition = server_repartition
+        self.server_repartition = server_repartition  # type: ignore
         self.file_generator = file_generator
         self.proposal_count = proposal_count
 

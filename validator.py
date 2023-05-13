@@ -23,7 +23,8 @@ def check_against_collapse(problem: Problem):
 
 def check_for_overfill(problem: Problem):
     for storage in problem.get_storage_list():
-        if storage.get_resources_current() > storage.get_resources_limits():
+        # only greater if all member of the object are greater. so not < is not the same as >=
+        if not storage.get_resources_current() < storage.get_resources_limits():
             raise Exception("Overfilled storage", str(storage.get_id()))
 
 

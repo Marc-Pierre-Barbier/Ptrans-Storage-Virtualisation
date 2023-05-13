@@ -109,6 +109,14 @@ class ResourceValues:
                 self._write_ops > other._write_ops
         return False
 
+    def __lt__(self, other: 'object | ResourceValues') -> bool:
+        if isinstance(other, ResourceValues):
+            return self._capacity < other._capacity and \
+                self._read_bandwidth < other._read_bandwidth and \
+                self._read_ops < other._read_ops and \
+                self._write_bandwidth < other._write_bandwidth and \
+                self._write_ops < other._write_ops
+        return False
 
 class Storage:
     def __init__(self, id: int, objects_ids: list[int], resources_limits: ResourceValues, resources_current: ResourceValues) -> None:

@@ -15,7 +15,7 @@ def create_problem():
 
     file_generator = FileGenerator(file_max, 0.1, 0.2, 0.5)
 
-    generator = ProblemGenerator(30000, 100, 9000, [tuple([get_ssd_server(), 20]), tuple([get_hdd_server(), 100])], file_generator)
+    generator = ProblemGenerator(30000, 100, [tuple([get_ssd_server(), 20]), tuple([get_hdd_server(), 100])], file_generator)
     problem: Problem = generator.generate()
 
     problem.log_visualization([0, 1, 2], [0, 1, 2])
