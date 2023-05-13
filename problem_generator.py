@@ -220,7 +220,7 @@ class ProblemGenerator:
                 if current_id not in proposal_dict:
                     proposal_dict[current_id] = []
 
-                proposal = Proposal(current_id, current_file, proposed_storages, ProposalType.MOVE, 0)
+                proposal = Proposal(len(proposals), current_file, proposed_storages, ProposalType.MOVE, 0)
                 proposal_dict[current_id].append(proposal)
                 proposals.append(proposal)
             except Exception:
@@ -249,9 +249,9 @@ if __name__ == "__main__":
 
     print(file_generator.generate_file().get_capacity() / (1024 * 1024 * 1024))
 
-    generator = ProblemGenerator(110000, 8000, [tuple([get_ssd_server(), 10]), tuple([get_hdd_server(), 1])], file_generator)  # type: ignore
+    generator = ProblemGenerator(80000, 200000, [tuple([get_ssd_server(), 10]), tuple([get_hdd_server(), 1])], file_generator)  # type: ignore
     problem = generator.generate()
 
     print("Generation succesfull ignore all previous errors")
     print(problem)
-    store_problem("fast_server_high_usage", problem)
+    store_problem("fast_server_medium_usage", problem)

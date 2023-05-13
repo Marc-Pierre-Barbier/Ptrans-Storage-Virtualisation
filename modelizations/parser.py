@@ -111,7 +111,9 @@ def store_problem(file_name: str, problem: Problem) -> None:
             file.write(line + '\n')
 
         file.write(PROPOSAL_MODE + '\n')
-        for proposal in problem.get_proposals_list():
+        proposals = problem.get_proposals_list()
+        proposals.sort(key=lambda a: a.get_id())
+        for proposal in proposals:
             line: str = ""
             line += str(proposal.get_id())
             line += " "
