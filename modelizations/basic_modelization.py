@@ -54,27 +54,59 @@ class ResourceValues:
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, ResourceValues):
-            return self._capacity == other._capacity and self._read_bandwidth == other._read_bandwidth and self._read_ops == other._read_ops and self._write_bandwidth == other._write_bandwidth and self._write_ops == other._write_ops
+            return self._capacity == other._capacity and \
+                    self._read_bandwidth == other._read_bandwidth and \
+                    self._read_ops == other._read_ops and \
+                    self._write_bandwidth == other._write_bandwidth and \
+                    self._write_ops == other._write_ops
         return False
 
     def __str__(self) -> str:
         return 'Capacity: %.2f\nRead Ops: %.2f\nRead Bandwidth: %.2f\nWrite Ops: %.2f\nWrite Bandwidth: %.2f\n' % (self._capacity, self._read_ops, self._read_bandwidth, self._write_ops, self._write_bandwidth)
 
     def __add__(self, other: 'ResourceValues'):
-        return ResourceValues(self._capacity + other._capacity, self._read_ops + other._read_ops, self._read_bandwidth + other._read_bandwidth, self._write_ops + other._write_ops, self._write_bandwidth + other._write_bandwidth)
+        return ResourceValues(
+            self._capacity + other._capacity,
+            self._read_ops + other._read_ops,
+            self._read_bandwidth + other._read_bandwidth,
+            self._write_ops + other._write_ops,
+            self._write_bandwidth + other._write_bandwidth
+        )
 
     def __sub__(self, other: 'ResourceValues'):
-        return ResourceValues(self._capacity - other._capacity, self._read_ops - other._read_ops, self._read_bandwidth - other._read_bandwidth, self._write_ops - other._write_ops, self._write_bandwidth - other._write_bandwidth)
+        return ResourceValues(
+            self._capacity - other._capacity,
+            self._read_ops - other._read_ops,
+            self._read_bandwidth - other._read_bandwidth,
+            self._write_ops - other._write_ops,
+            self._write_bandwidth - other._write_bandwidth
+        )
 
     def __mul__(self, other: float):
-        return ResourceValues(self._capacity * other, self._read_ops * other, self._capacity * other, self._write_ops * other, self._write_bandwidth * other)
+        return ResourceValues(
+            self._capacity * other,
+            self._read_ops * other,
+            self._read_bandwidth * other,
+            self._write_ops * other,
+            self._write_bandwidth * other
+        )
 
     def __truediv__(self, other: 'ResourceValues'):
-        return ResourceValues(self._capacity / other._capacity, self._read_ops / other._read_ops, self._read_bandwidth / other._read_bandwidth, self._write_ops / other._write_ops, self._write_bandwidth / other._write_bandwidth)
+        return ResourceValues(
+            self._capacity / other._capacity,
+            self._read_ops / other._read_ops,
+            self._read_bandwidth / other._read_bandwidth,
+            self._write_ops / other._write_ops,
+            self._write_bandwidth / other._write_bandwidth
+        )
 
     def __gt__(self, other: 'object | ResourceValues') -> bool:
         if isinstance(other, ResourceValues):
-            return self._capacity > other._capacity and self._read_bandwidth > other._read_bandwidth and self._read_ops > other._read_ops and self._write_bandwidth > other._write_bandwidth and self._write_ops > other._write_ops
+            return self._capacity > other._capacity and \
+                self._read_bandwidth > other._read_bandwidth and \
+                self._read_ops > other._read_ops and \
+                self._write_bandwidth > other._write_bandwidth and \
+                self._write_ops > other._write_ops
         return False
 
 

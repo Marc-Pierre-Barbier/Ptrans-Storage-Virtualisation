@@ -1,9 +1,17 @@
 import copy
+import functools
 from modelizations.basic_modelization import Object, Proposal, ProposalType, ResourceValues, Storage, Problem
 import numpy as np
 import random
+from modelizations.parser import store_problem
 
 from validator import check_problem
+
+B = 1
+KB = 1024 * B
+MB = 1024 * KB
+GB = 1024 * MB
+TB = 1024 * GB
 
 
 class FileGenerator:
@@ -36,77 +44,58 @@ class FileGenerator:
         delta = self.capacity_max - self.capacity_min
 
         return ResourceValues(
-            int(abs(np.random.normal(loc=delta.get_capacity(), scale=self.spread * self.capacity_min.get_capacity()))) + self.capacity_min.get_capacity(),
-            int(abs(np.random.normal(loc=delta.get_read_bandwidth(), scale=self.spread * self.capacity_min.get_read_bandwidth()))) + self.capacity_min.get_read_bandwidth(),
-            int(abs(np.random.normal(loc=delta.get_read_ops(), scale=self.spread * self.capacity_min.get_read_ops()))) + self.capacity_min.get_read_ops(),
-            int(abs(np.random.normal(loc=delta.get_write_bandwidth(), scale=self.spread * self.capacity_min.get_write_bandwidth()))) + self.capacity_min.get_write_bandwidth(),
-            int(abs(np.random.normal(loc=delta.get_write_ops(), scale=self.spread * self.capacity_min.get_write_ops()))) + self.capacity_min.get_write_ops()
+            int(abs(np.random.normal(loc=self.average.get_capacity(), scale=self.spread * delta.get_capacity()))) + self.capacity_min.get_capacity(),
+            int(abs(np.random.normal(loc=self.average.get_read_bandwidth(), scale=self.spread * delta.get_read_bandwidth()))) + self.capacity_min.get_read_bandwidth(),
+            int(abs(np.random.normal(loc=self.average.get_read_ops(), scale=self.spread * delta.get_read_ops()))) + self.capacity_min.get_read_ops(),
+            int(abs(np.random.normal(loc=self.average.get_write_bandwidth(), scale=self.spread * delta.get_write_bandwidth()))) + self.capacity_min.get_write_bandwidth(),
+            int(abs(np.random.normal(loc=self.average.get_write_ops(), scale=self.spread * delta.get_write_ops()))) + self.capacity_min.get_write_ops()
         )
 
 
 class ServerGenerator:
-    # a which point we define if a storage is overfilled
-    overfilled_max: ResourceValues
-    overfilled_min: ResourceValues
-    overfilled_spread: float
-
     # actual capacity range
     capacity_max: ResourceValues
     capacity_min: ResourceValues
     capacity_spread: float
+    average: ResourceValues
 
-    def __init__(self, capacity_max: ResourceValues, capacity_min: ResourceValues | int | float, overfilled_max: ResourceValues | int | float, overfilled_min: ResourceValues | int | float, capacity_spread: float, overfilled_spread: float) -> None:
-        if isinstance(capacity_min, ResourceValues) and isinstance(overfilled_max, ResourceValues) and isinstance(overfilled_min, ResourceValues):
-            self._constructorA(capacity_max, capacity_min, overfilled_max, overfilled_min, capacity_spread, overfilled_spread)
-        elif isinstance(capacity_min, int | float) and isinstance(overfilled_max, int | float) and isinstance(overfilled_min, int | float):
-            self._constructorB(capacity_max, capacity_min, overfilled_max, overfilled_min, capacity_spread, overfilled_spread)
+    def __init__(self, capacity_max: ResourceValues, capacity_min: ResourceValues | int | float, average: ResourceValues | int | float, capacity_spread: float, overfilled_spread: float) -> None:
+        if isinstance(capacity_min, ResourceValues) and isinstance(average, ResourceValues):
+            self._constructorA(capacity_max, capacity_min, average, capacity_spread, overfilled_spread)
+        elif isinstance(capacity_min, int | float) and isinstance(average, int | float):
+            self._constructorB(capacity_max, capacity_min, average, capacity_spread, overfilled_spread)
         else:
             raise Exception('Invalid parameters')
 
-    def _constructorB(self, capacity_max: ResourceValues, capacity_min: int | float, overfilled_max: int | float, overfilled_min: int | float, capacity_spread: float, overfilled_spread: float):
+    def _constructorB(self, capacity_max: ResourceValues, capacity_min: int | float, average: int | float, capacity_spread: float, overfilled_spread: float):
         if capacity_min > 1 or capacity_min < 0:
             raise Exception('Invalid capacity limit')
-
-        if overfilled_max > 1 or overfilled_max < 0 or overfilled_min > 1 or overfilled_min < 0:
-            raise Exception('Invalid overfill specifications')
 
         self.capacity_spread = capacity_spread
         self.overfilled_spread = overfilled_spread
         self.capacity_max = capacity_max
         self.capacity_min = capacity_max * capacity_min
-        self.overfilled_max = capacity_max * overfilled_max
-        self.overfilled_min = capacity_max * overfilled_min
+        self.average = capacity_max * average
 
-    def _constructorA(self, capacity_max: ResourceValues, capacity_min: ResourceValues | None, overfilled_max: ResourceValues | None, overfilled_min: ResourceValues | None, capacity_spread: float, overfilled_spread: float):
+    def _constructorA(self, capacity_max: ResourceValues, capacity_min: ResourceValues, average: ResourceValues, capacity_spread: float, overfilled_spread: float):
         self.capacity_spread = capacity_spread
         self.overfilled_spread = overfilled_spread
         self.capacity_max = capacity_max
-        self.capacity_min = capacity_min if capacity_min is not None else capacity_max
-        self.overfilled_max = overfilled_max if overfilled_max is not None else capacity_max
-        self.overfilled_min = overfilled_min if overfilled_min is not None else capacity_max
+        self.capacity_min = capacity_min
+        self.average = average
 
-    def generate_server(self) -> tuple[ResourceValues, ResourceValues]:
+    def generate_server(self) -> ResourceValues:
         delta = self.capacity_max - self.capacity_min
 
         capacity = ResourceValues(
-            int(abs(np.random.normal(loc=delta.get_capacity(), scale=self.capacity_spread * self.capacity_min.get_capacity()))) + self.capacity_min.get_capacity(),
-            int(abs(np.random.normal(loc=delta.get_read_bandwidth(), scale=self.capacity_spread * self.capacity_min.get_read_bandwidth()))) + self.capacity_min.get_read_bandwidth(),
-            int(abs(np.random.normal(loc=delta.get_read_ops(), scale=self.capacity_spread * self.capacity_min.get_read_ops()))) + self.capacity_min.get_read_ops(),
-            int(abs(np.random.normal(loc=delta.get_write_bandwidth(), scale=self.capacity_spread * self.capacity_min.get_write_bandwidth()))) + self.capacity_min.get_write_bandwidth(),
-            int(abs(np.random.normal(loc=delta.get_write_ops(), scale=self.capacity_spread * self.capacity_min.get_write_ops()))) + self.capacity_min.get_write_ops()
+            int(abs(np.random.normal(loc=self.average.get_capacity(), scale=self.capacity_spread * delta.get_capacity()))) + self.capacity_min.get_capacity(),
+            int(abs(np.random.normal(loc=self.average.get_read_bandwidth(), scale=self.capacity_spread * delta.get_read_bandwidth()))) + self.capacity_min.get_read_bandwidth(),
+            int(abs(np.random.normal(loc=self.average.get_read_ops(), scale=self.capacity_spread * delta.get_read_ops()))) + self.capacity_min.get_read_ops(),
+            int(abs(np.random.normal(loc=self.average.get_write_bandwidth(), scale=self.capacity_spread * delta.get_write_bandwidth()))) + self.capacity_min.get_write_bandwidth(),
+            int(abs(np.random.normal(loc=self.average.get_write_ops(), scale=self.capacity_spread * delta.get_write_ops()))) + self.capacity_min.get_write_ops()
         )
 
-        delta: ResourceValues = self.overfilled_max - self.overfilled_min
-
-        overfilled = ResourceValues(
-            int(abs(np.random.normal(loc=delta.get_capacity(), scale=self.overfilled_spread * self.overfilled_min.get_capacity()))) + self.overfilled_min.get_capacity(),
-            int(abs(np.random.normal(loc=delta.get_read_bandwidth(), scale=self.overfilled_spread * self.overfilled_min.get_read_bandwidth()))) + self.overfilled_min.get_read_bandwidth(),
-            int(abs(np.random.normal(loc=delta.get_read_ops(), scale=self.overfilled_spread * self.overfilled_min.get_read_ops()))) + self.overfilled_min.get_read_ops(),
-            int(abs(np.random.normal(loc=delta.get_write_bandwidth(), scale=self.overfilled_spread * self.overfilled_min.get_write_bandwidth()))) + self.overfilled_min.get_write_bandwidth(),
-            int(abs(np.random.normal(loc=delta.get_write_ops(), scale=self.overfilled_spread * self.overfilled_min.get_write_ops()))) + self.overfilled_min.get_write_ops()
-        )
-
-        return tuple([capacity, overfilled])
+        return capacity
 
 
 # Server archetypes presets
@@ -115,37 +104,51 @@ class ServerGenerator:
 def get_ssd_server():
     # Benchmark of my Corsair MP400:
     capacity = ResourceValues(
-        30000000000000,
-        50000,
-        3400000000,
-        50000,
-        491300000,
+        4 * TB,
+        90000,
+        3 * GB,
+        80000,
+        2 * GB,
     )
-    return ServerGenerator(capacity, 0.1, 0.95, 0.90, 0.5, 0.1)
+
+    avg = ResourceValues(
+        1 * TB,
+        50000,
+        1 * GB,
+        40000,
+        1 * GB,
+    )
+
+    return ServerGenerator(capacity, capacity * 0.1, avg, 0.5, 0.1)
 
 
 def get_hdd_server():
     capacity = ResourceValues(
-        120000000000000,
+        12 * TB,
         320,
-        400000000,
+        500 * MB,
         320,
-        291300000,
+        400 * MB,
     )
-    return ServerGenerator(capacity, 0.1, 0.95, 0.9, 0.5, 0.1)
+
+    min = copy.copy(capacity)
+    min._capacity = min._capacity * 0.1
+
+    avg = copy.copy(capacity)
+    avg._capacity = avg._capacity * 0.25
+
+    return ServerGenerator(capacity, min, avg, 0.5, 0.1)
 
 
 class ProblemGenerator:
     file_count: int
-    server_count: int
     proposal_count: int
     # Generator : weight the weight define the probability of using this generator
     server_repartition: list[tuple[ServerGenerator, int]]
     file_generator: FileGenerator
 
-    def __init__(self, file_count: int, server_count: int, proposal_count: int, server_repartition: list[tuple[ServerGenerator, int]], file_generator: FileGenerator) -> None:
+    def __init__(self, file_count: int, proposal_count: int, server_repartition: list[tuple[ServerGenerator, int]], file_generator: FileGenerator) -> None:
         self.file_count = file_count
-        self.server_count = server_count
         self.server_repartition = server_repartition
         self.file_generator = file_generator
         self.proposal_count = proposal_count
@@ -159,25 +162,14 @@ class ProblemGenerator:
         proposals: list[Proposal] = []
 
         # Generating servers
-        wheight_total = 0
-        for _generator, weight in self.server_repartition:
-            wheight_total += weight
-
-        for id in range(self.server_count):
-            index = random.randint(1, wheight_total)
-
-            target_generator = self.server_repartition[0][0]
-            for server in self.server_repartition:
-                index -= server[1]
-                if index < 0:
-                    target_generator: ServerGenerator = server[0]
-                    break
-
-            capacity, _ = target_generator.generate_server()
-
-            storage = Storage(id, [], capacity, ResourceValues(0, 0, 0, 0, 0))
-            servers.append(storage)
-            server_dict[id] = storage
+        storage_id = 0
+        for generator, weight in self.server_repartition:
+            for _ in range(weight):
+                capacity = generator.generate_server()
+                storage = Storage(storage_id, [], capacity, ResourceValues(0, 0, 0, 0, 0))
+                servers.append(storage)
+                server_dict[storage_id] = storage
+                storage_id += 1
 
         # Generating files
         for id in range(self.file_count):
@@ -198,13 +190,15 @@ class ProblemGenerator:
                     available_servers[index].add_object_id(file.get_id())
                     available_servers[index].set_resources_current(available_servers[index].get_resources_current() + file.get_resources_values())
                     file.get_storages_ids().append(available_servers[index].get_id())
+                else:
+                    print("[DEBUG]A drive was not selected, displaying delta")
+                    print((available_servers[index].get_resources_current() + file.get_resources_values()) / available_servers[index].get_resources_limits())
                 available_servers.pop(index)
 
         available_files = copy.copy(files)
 
         # Generating proposals
         while len(proposals) < self.proposal_count:
-            print(len(proposals))
             file_index = 0
             try:
                 file_index = random.randint(0, len(available_files) - 1)
@@ -232,22 +226,32 @@ class ProblemGenerator:
             except Exception:
                 available_files.pop(file_index)
 
-        prob = Problem(self.server_count, server_dict, self.file_count, files_dict, proposal_dict)
+        server_count = functools.reduce(lambda acc, e: e[1] + acc, self.server_repartition, 0)
+
+        prob = Problem(server_count, server_dict, self.file_count, files_dict, proposal_dict)
         check_problem(prob)
         return prob
 
 
 if __name__ == "__main__":
     file_max = ResourceValues(
-        10000000000,
-        1000,
-        10000000,
-        1000,
-        5000000
+        10 * GB,  # 10Gb
+        100,
+        10,
+        10,
+        5
     )
 
-    file_generator = FileGenerator(file_max, 0.1, 0.2, 0.5)
+    file_average = file_max * 0.0002  # 2 MB file average
+    file_min = file_max * 0.00001  # 102 KB file average
 
-    generator = ProblemGenerator(300, 10000, 100, [tuple([get_ssd_server(), 20]), tuple([get_hdd_server(), 100])], file_generator)
+    file_generator = FileGenerator(file_max, file_min, file_average, 0.01)  # 10G * 0.0001 => smallest file is 10 Mb
+
+    print(file_generator.generate_file().get_capacity() / (1024 * 1024 * 1024))
+
+    generator = ProblemGenerator(110000, 8000, [tuple([get_ssd_server(), 10]), tuple([get_hdd_server(), 1])], file_generator)  # type: ignore
     problem = generator.generate()
+
+    print("Generation succesfull ignore all previous errors")
     print(problem)
+    store_problem("fast_server_high_usage", problem)

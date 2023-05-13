@@ -13,13 +13,20 @@ def storage_collapser(problem: Problem, storageId: int) -> ResourceValues:
 
 
 def check_against_collapse(problem: Problem):
-    for storageId, storage in problem.get_storages().items():
-        collapsed_storage = storage_collapser(problem, storageId)
+    for storage in problem.get_storage_list():
+        collapsed_storage = storage_collapser(problem, storage.get_id())
         if storage.get_resources_current() != collapsed_storage:
             print(storage.get_resources_current())
             print(collapsed_storage)
-            raise Exception("Inconsistent current and computer ressources: " + str(storageId))
+            raise Exception("Inconsistent current and computer ressources: " + str(storage.get_id()))
+
+
+def check_for_overfill(problem: Problem):
+    for storage in problem.get_storage_list():
+        if storage.get_resources_current() > storage.get_resources_limits():
+            raise Exception("Overfilled storage", str(storage.get_id()))
 
 
 def check_problem(problem: Problem):
-    return check_against_collapse(problem)
+    check_against_collapse(problem)
+    check_for_overfill(problem)
