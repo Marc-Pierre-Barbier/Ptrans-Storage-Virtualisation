@@ -146,7 +146,7 @@ class ProposalsSolver(Solver):
             solver.Add(
                 sum(affectations[item_id, volume_id] * self.blowup_problem.items_weight0[item_id] for item_id in self.blowup_problem.items_ortools_ids) <= self.blowup_problem.volumes_capacity0[volume_id]
             )
-            solver.Add(
+            '''solver.Add(
                 sum(affectations[item_id, volume_id] * self.blowup_problem.items_weight0[item_id] for item_id in self.blowup_problem.items_ortools_ids) >= self.blowup_problem.volumes_capacity0[volume_id] / 4
             )
             solver.Add(
@@ -160,7 +160,7 @@ class ProposalsSolver(Solver):
             )
             solver.Add(
                 sum(affectations[item_id, volume_id] * self.blowup_problem.items_weight4[item_id] for item_id in self.blowup_problem.items_ortools_ids) >= self.blowup_problem.volumes_capacity4[volume_id] / 4
-            )
+            )'''
 
         objective = solver.Objective()
 
