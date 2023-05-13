@@ -121,21 +121,21 @@ class ProposalsSolver(Solver):
             solver.Add(
                 sum(affectations[item_id, volume_id] * self.blowup_problem.items_weight0[item_id] for item_id in self.blowup_problem.items_ortools_ids) <= self.blowup_problem.volumes_capacity0[volume_id]
             )
-            '''solver.Add(
-                sum(affectations[item_id, volume_id] * self.blowup_problem.items_weight1[item_id] for item_id in self.blowup_problem.items_ortools_ids) <= self.blowup_problem.volumes_capacity1[volume_id]
+            solver.Add(
+                sum(affectations[item_id, volume_id] * self.blowup_problem.items_weight1[item_id] for item_id in self.blowup_problem.items_ortools_ids) <= self.blowup_problem.volumes_capacity1[volume_id] * 2
             )
             solver.Add(
-                sum(affectations[item_id, volume_id] * self.blowup_problem.items_weight2[item_id] for item_id in self.blowup_problem.items_ortools_ids) <= self.blowup_problem.volumes_capacity2[volume_id]
+                sum(affectations[item_id, volume_id] * self.blowup_problem.items_weight2[item_id] for item_id in self.blowup_problem.items_ortools_ids) <= self.blowup_problem.volumes_capacity2[volume_id] * 2
             )
             solver.Add(
-                sum(affectations[item_id, volume_id] * self.blowup_problem.items_weight3[item_id] for item_id in self.blowup_problem.items_ortools_ids) <= self.blowup_problem.volumes_capacity3[volume_id]
+                sum(affectations[item_id, volume_id] * self.blowup_problem.items_weight3[item_id] for item_id in self.blowup_problem.items_ortools_ids) <= self.blowup_problem.volumes_capacity3[volume_id] * 2
             )
             solver.Add(
-                sum(affectations[item_id, volume_id] * self.blowup_problem.items_weight4[item_id] for item_id in self.blowup_problem.items_ortools_ids) <= self.blowup_problem.volumes_capacity4[volume_id]
-            )'''
+                sum(affectations[item_id, volume_id] * self.blowup_problem.items_weight4[item_id] for item_id in self.blowup_problem.items_ortools_ids) <= self.blowup_problem.volumes_capacity4[volume_id] * 2
+            )
 
         solver.Add(
-            sum([proposals_kept[proposal_id] for proposal_id in self.blowup_problem.proposals_ortools_ids]) <= 100
+            sum([proposals_kept[proposal_id] for proposal_id in self.blowup_problem.proposals_ortools_ids]) <= 1000
         )
 
         objective = solver.Objective()
@@ -145,8 +145,7 @@ class ProposalsSolver(Solver):
                                          (self.blowup_problem.items_weight1[item_id] / self.blowup_problem.volumes_capacity1[volume_id])
                                          * (self.blowup_problem.items_weight2[item_id] / self.blowup_problem.volumes_capacity2[volume_id])
                                          * (self.blowup_problem.items_weight3[item_id] / self.blowup_problem.volumes_capacity3[volume_id])
-                                         * (self.blowup_problem.items_weight4[item_id] / self.blowup_problem.volumes_capacity4[volume_id])
-                                         * affectations[item_id, volume_id])
+                                         * (self.blowup_problem.items_weight4[item_id] / self.blowup_problem.volumes_capacity4[volume_id]))
         objective.SetMinimization()
 
         print('Solver launched')
