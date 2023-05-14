@@ -15,12 +15,14 @@ TB = 1024 * GB
 
 
 class FileGenerator:
+    """The file Generator is a class that defines how files should be generated"""
     capacity_max: ResourceValues
     capacity_min: ResourceValues
     average: ResourceValues
     spread: float
 
     def __init__(self, capacity_max: ResourceValues, capacity_min: ResourceValues | float, average: ResourceValues | float, spread: float) -> None:
+        # polymorphism on the constructor can take multiplier of the max value instead of having to manually put everything
         if isinstance(capacity_min, ResourceValues) and isinstance(average, ResourceValues):
             self._constructorA(capacity_max, capacity_min, average, spread)
         elif isinstance(capacity_min, int | float) and isinstance(average, int | float):
@@ -41,6 +43,7 @@ class FileGenerator:
         self.spread = spread
 
     def generate_file(self):
+        # used to calculate the scale argument
         delta = self.capacity_max - self.capacity_min
 
         return ResourceValues(
@@ -60,6 +63,7 @@ class ServerGenerator:
     average: ResourceValues
 
     def __init__(self, capacity_max: ResourceValues, capacity_min: ResourceValues | int | float, average: ResourceValues | int | float, capacity_spread: float) -> None:
+        # polymorphism on the constructor can take multiplier of the max value instead of having to manually put everything
         if isinstance(capacity_min, ResourceValues) and isinstance(average, ResourceValues):
             self._constructorA(capacity_max, capacity_min, average, capacity_spread)
         elif isinstance(capacity_min, int | float) and isinstance(average, int | float):
@@ -83,6 +87,7 @@ class ServerGenerator:
         self.average = average
 
     def generate_server(self) -> ResourceValues:
+        # used to calculate the scale argument
         delta = self.capacity_max - self.capacity_min
 
         capacity = ResourceValues(
@@ -177,25 +182,26 @@ class ProblemGenerator:
             files_dict[id] = new_file
 
         # Binding the files and servers
+        # Files are bound to two different servers
         for file in files:
+            # servers for which we aren't bound yet and might be able to be bound
             available_servers = copy.copy(servers)
             while len(file.get_storages_ids()) < 2:
                 if len(available_servers) == 0:
                     raise Exception('No enough server for the numbers and size of the files')
 
+                # choose a random server
                 index = random.randint(1, len(available_servers)) - 1
-                if available_servers[index].get_resources_current() + file.get_resources_values() < available_servers[index].get_resources_limits():
-                    available_servers[index].add_object_id(file.get_id())
-                    available_servers[index].set_resources_current(available_servers[index].get_resources_current() + file.get_resources_values())
-                    file.get_storages_ids().append(available_servers[index].get_id())
-                else:
-                    print("[DEBUG]A drive was not selected, displaying delta")
-                    print((available_servers[index].get_resources_current() + file.get_resources_values()) / available_servers[index].get_resources_limits())
-                available_servers.pop(index)
-
-        available_files = copy.copy(files)
+                server = available_servers.pop(index)
+                if server.get_resources_current() + file.get_resources_values() < server.get_resources_limits():
+                    server.add_object_id(file.get_id())
+                    server.set_resources_current(server.get_resources_current() + file.get_resources_values())
+                    file.get_storages_ids().append(server.get_id())
 
         # Generating proposals
+        # we select a random file an see if it can fit anywhere else, if it can we store the proposal and try again.
+        # if it can't we remove the file from the vailable files
+        available_files = copy.copy(files)
         while len(proposals) < self.proposal_count:
             file_index = 0
             try:
@@ -241,15 +247,11 @@ if __name__ == "__main__":
     )
 
     file_average = file_max * 0.0002  # 2 MB file average
-    file_min = file_max * 0.00001  # 102 KB file average
+    file_min = file_max * 0.00001  # 102 KB file min
 
     file_generator = FileGenerator(file_max, file_min, file_average, 0.01)  # 10G * 0.0001 => smallest file is 10 Mb
-
-    print(file_generator.generate_file().get_capacity() / (1024 * 1024 * 1024))
 
     generator = ProblemGenerator(80000, 200000, [tuple([get_ssd_server(), 10]), tuple([get_hdd_server(), 1])], file_generator)  # type: ignore
     problem = generator.generate()
 
-    print("Generation succesfull ignore all previous errors")
-    print(problem)
     store_problem("fast_server_medium_usage", problem)
