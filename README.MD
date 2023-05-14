@@ -26,3 +26,5 @@ source venv/bin/activate
 ```
 
 the "main.py" file contains a simple test.
+
+Warning if you plan on using ortools you will need at least 20Gb of **FREE** system memory
