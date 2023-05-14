@@ -77,51 +77,51 @@ def store_problem(file_name: str, problem: Problem) -> None:
         file.write(STORAGE_MODE + '\n')
         for storage in problem.get_storage_list():
             limits = storage.get_resources_limits()
-            line: str = ""
-            line += str(storage.get_id())
-            line += " "
-            line += str(limits.get_capacity())
-            line += " "
-            line += str(limits.get_read_ops())
-            line += " "
-            line += str(limits.get_read_bandwidth())
-            line += " "
-            line += str(limits.get_write_ops())
-            line += " "
-            line += str(limits.get_write_bandwidth())
-            file.write(line + '\n')
+            storageLine: str = ""
+            storageLine += str(storage.get_id())
+            storageLine += " "
+            storageLine += str(limits.get_capacity())
+            storageLine += " "
+            storageLine += str(limits.get_read_ops())
+            storageLine += " "
+            storageLine += str(limits.get_read_bandwidth())
+            storageLine += " "
+            storageLine += str(limits.get_write_ops())
+            storageLine += " "
+            storageLine += str(limits.get_write_bandwidth())
+            file.write(storageLine + '\n')
 
         file.write(OBJECT_MODE + '\n')
         for object in problem.get_object_list():
             ressources = object.get_resources_values()
-            line: str = ""
-            line += str(object.get_id())
-            line += " "
-            line += str(ressources.get_capacity())
-            line += " "
-            line += str(ressources.get_read_ops())
-            line += " "
-            line += str(ressources.get_read_bandwidth())
-            line += " "
-            line += str(ressources.get_write_ops())
-            line += " "
-            line += str(ressources.get_write_bandwidth())
-            line += " "
-            line += " ".join(map(str, object.get_storages_ids()))
-            file.write(line + '\n')
+            objectLine: str = ""
+            objectLine += str(object.get_id())
+            objectLine += " "
+            objectLine += str(ressources.get_capacity())
+            objectLine += " "
+            objectLine += str(ressources.get_read_ops())
+            objectLine += " "
+            objectLine += str(ressources.get_read_bandwidth())
+            objectLine += " "
+            objectLine += str(ressources.get_write_ops())
+            objectLine += " "
+            objectLine += str(ressources.get_write_bandwidth())
+            objectLine += " "
+            objectLine += " ".join(map(str, object.get_storages_ids()))
+            file.write(objectLine + '\n')
 
         file.write(PROPOSAL_MODE + '\n')
         proposals = problem.get_proposals_list()
         proposals.sort(key=lambda a: a.get_id())
         for proposal in proposals:
-            line: str = ""
-            line += str(proposal.get_id())
-            line += " "
-            line += str(proposal.get_object_id())
-            line += " "
-            line += str(proposal.get_proposal_type()._value_)
-            line += " "
-            line += str(proposal.get_priority())
-            line += " "
-            line += " ".join(map(str, proposal.get_proposed_storages()))
-            file.write(line + '\n')
+            proposalLine: str = ""
+            proposalLine += str(proposal.get_id())
+            proposalLine += " "
+            proposalLine += str(proposal.get_object_id())
+            proposalLine += " "
+            proposalLine += str(proposal.get_proposal_type()._value_)
+            proposalLine += " "
+            proposalLine += str(proposal.get_priority())
+            proposalLine += " "
+            proposalLine += " ".join(map(str, proposal.get_proposed_storages()))
+            file.write(proposalLine + '\n')

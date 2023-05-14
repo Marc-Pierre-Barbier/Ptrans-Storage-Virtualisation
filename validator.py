@@ -1,5 +1,3 @@
-# TODO: implement a few error checker
-
 from modelizations.basic_modelization import Problem, ResourceValues
 
 
