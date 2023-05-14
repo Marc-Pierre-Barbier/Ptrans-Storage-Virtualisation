@@ -8,7 +8,7 @@ STORAGE_MODE = "=== Storages ==="
 
 def parse_problem(path: str) -> Problem:
     with open('data_sample/' + path + ".txt", 'r') as file:
-        emptyRessource = ResourceValues(0, 0, 0, 0, 0)
+        empty_ressource = ResourceValues(0, 0, 0, 0, 0)
         storages: dict[int, Storage] = {}
         objects: dict[int, Object] = {}
         proposals: dict[int, list[Proposal]] = {}
@@ -34,7 +34,7 @@ def parse_problem(path: str) -> Problem:
                 wband = float(parameters[5])
                 resources = ResourceValues(capacity, rops, rband, wops, wband)
 
-                storages[id] = Storage(id, [], resources, emptyRessource)
+                storages[id] = Storage(id, [], resources, empty_ressource)
                 continue
 
             if mode == OBJECT_MODE:
@@ -77,7 +77,7 @@ def store_problem(file_name: str, problem: Problem) -> None:
         file.write(STORAGE_MODE + '\n')
         for storage in problem.get_storage_list():
             limits = storage.get_resources_limits()
-            line: str = ""
+            line = ""
             line += str(storage.get_id())
             line += " "
             line += str(limits.get_capacity())
@@ -94,7 +94,7 @@ def store_problem(file_name: str, problem: Problem) -> None:
         file.write(OBJECT_MODE + '\n')
         for object in problem.get_object_list():
             ressources = object.get_resources_values()
-            line: str = ""
+            line = ""
             line += str(object.get_id())
             line += " "
             line += str(ressources.get_capacity())
@@ -114,7 +114,7 @@ def store_problem(file_name: str, problem: Problem) -> None:
         proposals = problem.get_proposals_list()
         proposals.sort(key=lambda a: a.get_id())
         for proposal in proposals:
-            line: str = ""
+            line = ""
             line += str(proposal.get_id())
             line += " "
             line += str(proposal.get_object_id())

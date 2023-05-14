@@ -310,6 +310,8 @@ class Problem:
 
 
 class Tracker:
+    '''A tracker used for visualisation of the problems'''
+
     def __init__(self, problem: Problem, object: Object | None, storage: Storage | None, in_depth: bool = False) -> None:
         self._problem = problem
         self._object = object
