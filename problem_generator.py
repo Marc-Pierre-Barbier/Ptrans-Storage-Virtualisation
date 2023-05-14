@@ -59,27 +59,25 @@ class ServerGenerator:
     capacity_spread: float
     average: ResourceValues
 
-    def __init__(self, capacity_max: ResourceValues, capacity_min: ResourceValues | int | float, average: ResourceValues | int | float, capacity_spread: float, overfilled_spread: float) -> None:
+    def __init__(self, capacity_max: ResourceValues, capacity_min: ResourceValues | int | float, average: ResourceValues | int | float, capacity_spread: float) -> None:
         if isinstance(capacity_min, ResourceValues) and isinstance(average, ResourceValues):
-            self._constructorA(capacity_max, capacity_min, average, capacity_spread, overfilled_spread)
+            self._constructorA(capacity_max, capacity_min, average, capacity_spread)
         elif isinstance(capacity_min, int | float) and isinstance(average, int | float):
-            self._constructorB(capacity_max, capacity_min, average, capacity_spread, overfilled_spread)
+            self._constructorB(capacity_max, capacity_min, average, capacity_spread)
         else:
             raise Exception('Invalid parameters')
 
-    def _constructorB(self, capacity_max: ResourceValues, capacity_min: int | float, average: int | float, capacity_spread: float, overfilled_spread: float):
+    def _constructorB(self, capacity_max: ResourceValues, capacity_min: int | float, average: int | float, capacity_spread: float):
         if capacity_min > 1 or capacity_min < 0:
             raise Exception('Invalid capacity limit')
 
         self.capacity_spread = capacity_spread
-        self.overfilled_spread = overfilled_spread
         self.capacity_max = capacity_max
         self.capacity_min = capacity_max * capacity_min
         self.average = capacity_max * average
 
-    def _constructorA(self, capacity_max: ResourceValues, capacity_min: ResourceValues, average: ResourceValues, capacity_spread: float, overfilled_spread: float):
+    def _constructorA(self, capacity_max: ResourceValues, capacity_min: ResourceValues, average: ResourceValues, capacity_spread: float):
         self.capacity_spread = capacity_spread
-        self.overfilled_spread = overfilled_spread
         self.capacity_max = capacity_max
         self.capacity_min = capacity_min
         self.average = average
@@ -119,7 +117,7 @@ def get_ssd_server():
         1 * GB,
     )
 
-    return ServerGenerator(capacity, capacity * 0.1, avg, 0.5, 0.1)
+    return ServerGenerator(capacity, capacity * 0.1, avg, 0.5)
 
 
 def get_hdd_server():
@@ -137,19 +135,19 @@ def get_hdd_server():
     avg = copy.copy(capacity)
     avg._capacity = avg._capacity * 0.25
 
-    return ServerGenerator(capacity, min, avg, 0.5, 0.1)
+    return ServerGenerator(capacity, min, avg, 0.5)
 
 
 class ProblemGenerator:
     file_count: int
     proposal_count: int
     # Generator : weight the weight define the probability of using this generator
-    server_repartition: list[tuple[ServerGenerator, int]]
+    server_distribution: list[tuple[ServerGenerator, int]]
     file_generator: FileGenerator
 
-    def __init__(self, file_count: int, proposal_count: int, server_repartition: list[tuple[ServerGenerator | int]], file_generator: FileGenerator) -> None:
+    def __init__(self, file_count: int, proposal_count: int, server_distribution: list[tuple[ServerGenerator | int]], file_generator: FileGenerator) -> None:
         self.file_count = file_count
-        self.server_repartition = server_repartition  # type: ignore
+        self.server_distribution = server_distribution  # type: ignore
         self.file_generator = file_generator
         self.proposal_count = proposal_count
 
@@ -163,7 +161,7 @@ class ProblemGenerator:
 
         # Generating servers
         storage_id = 0
-        for generator, weight in self.server_repartition:
+        for generator, weight in self.server_distribution:
             for _ in range(weight):
                 capacity = generator.generate_server()
                 storage = Storage(storage_id, [], capacity, ResourceValues(0, 0, 0, 0, 0))
@@ -226,7 +224,7 @@ class ProblemGenerator:
             except Exception:
                 available_files.pop(file_index)
 
-        server_count = functools.reduce(lambda acc, e: e[1] + acc, self.server_repartition, 0)
+        server_count = functools.reduce(lambda acc, e: e[1] + acc, self.server_distribution, 0)
 
         prob = Problem(server_count, server_dict, self.file_count, files_dict, proposal_dict)
         check_problem(prob)
