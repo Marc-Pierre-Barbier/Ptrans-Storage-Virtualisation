@@ -1,4 +1,5 @@
-# TODO: implement a few error checker
+# This code contains basic error checkers for problems.
+# Theses are meant to check when reading something or when generating a file
 
 from modelizations.basic_modelization import Problem, ResourceValues
 

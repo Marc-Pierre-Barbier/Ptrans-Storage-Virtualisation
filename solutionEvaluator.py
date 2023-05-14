@@ -25,7 +25,6 @@ def entropy(data: list[float]) -> float:
 
     ent = 0.
 
-    # Compute entropy
     for i in probs:
         ent -= 100 * i * log(i, 2)
 
@@ -44,6 +43,8 @@ def moy_ecart_type(list: list[float]) -> tuple[float, float, float]:
     return (avg, var, sqrt(var))
 
 
+# take a function that convert a list of values to a score
+# this way we can compute both the entrop and absolude deviation using a single function
 def problem_agregator(problem: Problem, algorithm: Callable[[list[float]], float]) -> ResourceValues:
     if len(problem.get_storages()) <= 1:
         return ResourceValues(0, 0, 0, 0, 0)
