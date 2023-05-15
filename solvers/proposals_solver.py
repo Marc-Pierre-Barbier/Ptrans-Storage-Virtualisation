@@ -1,5 +1,5 @@
-from typing import Literal
 from modelizations.abstract_modelization import ProblemInstance
+from modelizations.basic_modelization import Problem
 from solvers.solver import Solver
 from ortools.linear_solver import pywraplp
 from time import time
@@ -7,7 +7,7 @@ from time import time
 
 # only usefull for typings
 class BlowupProblem:
-    def __init__(self, problem: ProblemInstance) -> None:
+    def __init__(self, problem: ProblemInstance):
         self.items_weight0 = [item.get_resources()[0] for item in problem.get_items()]
         self.items_weight1 = [item.get_resources()[1] for item in problem.get_items()]
         self.items_weight2 = [item.get_resources()[2] for item in problem.get_items()]
@@ -48,13 +48,12 @@ class ProposalsSolver(Solver):
     def __init__(self, path: str):
         super().__init__(path)
 
-    def solve(self) -> Literal['Error : the problem cannot be solved.'] | None:
+    def solve(self) -> Problem:
         self.blowup_problem = BlowupProblem(self.get_problem())
         # the type of the solver should have a significant impact but we don't know what because or-tools has no documentation explaining this
         solver = pywraplp.Solver.CreateSolver('SCIP')
         if solver is None:
-            print('SCIP solver unavailable.')
-            return None
+            raise Exception('SCIP solver unavailable.')
 
         # We initialize the variables (boolean, aka intvar 0/1) that will be modified by ortools algorithm
         proposals_kept: dict[int, pywraplp.Variable] = {}
@@ -129,6 +128,14 @@ class ProposalsSolver(Solver):
                 sum(affectations[item_id, volume_id] * self.blowup_problem.items_weight0[item_id] for item_id in self.blowup_problem.items_ortools_ids) <= self.blowup_problem.volumes_capacity0[volume_id]
             )
 
+        solver.Add(
+            sum([proposals_kept[proposal_id] for proposal_id in self.blowup_problem.proposals_ortools_ids]) >= 10
+        )
+
+        solver.Add(
+            sum([proposals_kept[proposal_id] for proposal_id in self.blowup_problem.proposals_ortools_ids]) <= 32
+        )
+
         # declaring the objective function
         objective = solver.Objective()
 
@@ -167,4 +174,4 @@ class ProposalsSolver(Solver):
 
         self.set_proposals_kept(problem_proposals_kept)
 
-        return None
+        return self.update_basic_problem()

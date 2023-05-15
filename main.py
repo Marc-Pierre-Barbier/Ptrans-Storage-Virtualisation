@@ -7,12 +7,12 @@ def test_problem() -> ProposalsSolver:
     # check if the stored problem is valid
     # if it's not valid it will throw an exception
     check_problem(solver.get_basic_problem())
+
     return solver
 
 
 if __name__ == "__main__":
     solver = test_problem()
-    solver.solve()
-    problem = solver.update_basic_problem()
+    problem = solver.solve()
 
     check_problem(problem)

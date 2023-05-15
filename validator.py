@@ -6,11 +6,11 @@ from modelizations.basic_modelization import Problem, ResourceValues
 
 def storage_collapser(problem: Problem, storage_id: int) -> ResourceValues:
     """Return the usage of each storages, storages_list[i] <=> return[i]"""
-    ressouces = ResourceValues(0, 0, 0, 0, 0)
+    ressources = ResourceValues(0, 0, 0, 0, 0)
     for id in problem.get_storages()[storage_id].get_objects_ids():
-        ressouces += problem.get_objects()[id].get_resources_values()
+        ressources += problem.get_objects()[id].get_resources_values()
 
-    return ressouces
+    return ressources
 
 
 def check_against_collapse(problem: Problem):
@@ -25,7 +25,7 @@ def check_against_collapse(problem: Problem):
 def check_for_overfill(problem: Problem):
     for storage in problem.get_storage_list():
         # only greater if all member of the object are greater. so not < is not the same as >=
-        if not storage.get_resources_current() < storage.get_resources_limits():
+        if not storage.get_resources_current().get_capacity() < storage.get_resources_limits().get_capacity():
             raise Exception("Overfilled storage", str(storage.get_id()))
 
 

@@ -1,5 +1,4 @@
 from enum import Enum
-from itertools import chain
 import sys
 import numpy as np
 import datetime as dt
@@ -191,7 +190,7 @@ class Object:
         return self._resource_values
 
     def set_storages_ids(self, storages_ids: list[int]) -> None:
-        self._storages_id = storages_ids
+        self._storages_ids = storages_ids
 
 
 class Proposal:
@@ -232,7 +231,7 @@ class Proposal:
 
 
 class Problem:
-    def __init__(self, storage_max_id: int, storages: dict[int, Storage], object_max_id: int, objects: dict[int, Object], proposals: dict[int, list[Proposal]]) -> None:
+    def __init__(self, storage_max_id: int, storages: dict[int, Storage], object_max_id: int, objects: dict[int, Object], proposals: dict[int, Proposal]) -> None:
         self._storage_max_id = storage_max_id
         self._storages = storages
         self._object_max_id = object_max_id
@@ -261,27 +260,28 @@ class Problem:
         return
             dict[objectid, proposal list]
     """
-    def get_proposals(self) -> dict[int, list[Proposal]]:
+    def get_proposals(self) -> dict[int, Proposal]:
         return self._proposals
 
     def get_proposals_list(self) -> list[Proposal]:
-        return list(chain(*self._proposals.values()))
+        return list(self._proposals.values())
 
     def update_modelization(self, proposals_kept: list[int]) -> None:
         for proposal_id in proposals_kept:
-            proposals: list[Proposal] = self.get_proposals()[proposal_id]
-            for proposal in proposals:
-                object: Object = self.get_objects()[proposal.get_object_id()]
+            proposal: Proposal = self.get_proposals()[proposal_id]
+            object: Object = self.get_objects()[proposal.get_object_id()]
 
-                for storage_id in object.get_storages_ids():
-                    self.get_storages()[storage_id].remove_object_id(object.get_id())
+            for storage_id in object.get_storages_ids():
+                storage: Storage = self.get_storages()[storage_id]
+                storage.remove_object_id(object.get_id())
+                storage._resources_current = storage.get_resources_current() - object.get_resources_values()
 
-                storages_ids: list[int] = proposal.get_proposed_storages()
-                object._storages_id = storages_ids
-                for storage_id in storages_ids:
-                    storage: Storage = self.get_storages()[storage_id]
-
-                    storage.add_object_id(object.get_id())
+            storages_ids: list[int] = proposal.get_proposed_storages()
+            object.set_storages_ids(storages_ids)
+            for storage_id in storages_ids:
+                storage = self.get_storages()[storage_id]
+                storage.add_object_id(object.get_id())
+                storage._resources_current = storage.get_resources_current() + object.get_resources_values()
 
     def get_presence_matrix(self) -> np.ndarray:
         presence_matrix = np.full((self.get_object_max_id() + 1, self.get_storage_max_id() + 1), '-       -', 'U9')
@@ -303,7 +303,7 @@ class Problem:
                     '\n---------------------\n' +
                     'Presence matrix indicating (object, storage) when object is in storage (using indexes)\n\n'
                 )
-                # file.write(np.array2string(self.get_presence_matrix(), max_line_width=99999999999999))
+                file.write(np.array2string(self.get_presence_matrix(), max_line_width=99999999999999))
                 for tracked_object in tracked_objects:
                     file.write(Tracker(self, self.get_objects()[tracked_object], None, True).track())
                 for tracked_storage in tracked_storages:

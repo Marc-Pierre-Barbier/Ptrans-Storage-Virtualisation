@@ -1,5 +1,7 @@
+import copy
 import functools
 from modelizations.basic_modelization import Object, Problem, Proposal, ProposalType, Storage, ResourceValues
+from validator import check_problem
 
 PROPOSAL_MODE = "=== Proposals ==="
 OBJECT_MODE = "=== Objects ==="
@@ -11,7 +13,7 @@ def parse_problem(path: str) -> Problem:
         empty_ressource = ResourceValues(0, 0, 0, 0, 0)
         storages: dict[int, Storage] = {}
         objects: dict[int, Object] = {}
-        proposals: dict[int, list[Proposal]] = {}
+        proposals: dict[int, Proposal] = {}
         mode: str | None = None
         for rawline in file:
             line = rawline.rstrip()
@@ -34,7 +36,7 @@ def parse_problem(path: str) -> Problem:
                 wband = float(parameters[5])
                 resources = ResourceValues(capacity, rops, rband, wops, wband)
 
-                storages[id] = Storage(id, [], resources, empty_ressource)
+                storages[id] = Storage(id, [], resources, copy.copy(empty_ressource))
                 continue
 
             if mode == OBJECT_MODE:
@@ -61,13 +63,12 @@ def parse_problem(path: str) -> Problem:
                 proposal_type = ProposalType.from_id(int(parameters[2]))
                 priority = float(parameters[3])
 
-                if object_id not in proposals:
-                    proposals[object_id] = []
-
-                proposals[object_id].append(Proposal(id, objects[object_id], list(map(int, parameters[4::])), proposal_type, priority))
+                proposals[id] = Proposal(id, objects[object_id], list(map(int, parameters[4::])), proposal_type, priority)
 
         object_max: int = functools.reduce(lambda a, b: a if a > b else b, list(objects.keys()))
         storage_max: int = functools.reduce(lambda a, b: a if a > b else b, list(proposals.keys()))
+
+        check_problem(Problem(storage_max, storages, object_max, objects, proposals))
 
         return Problem(storage_max, storages, object_max, objects, proposals)
 
@@ -77,7 +78,7 @@ def store_problem(file_name: str, problem: Problem) -> None:
         file.write(STORAGE_MODE + '\n')
         for storage in problem.get_storage_list():
             limits = storage.get_resources_limits()
-            line = ""
+            line: str = ""
             line += str(storage.get_id())
             line += " "
             line += str(limits.get_capacity())

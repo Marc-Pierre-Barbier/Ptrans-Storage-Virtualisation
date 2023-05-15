@@ -13,7 +13,7 @@ MB = 1024 * KB
 GB = 1024 * MB
 TB = 1024 * GB
 
-MAX_TRY = 1000
+MAX_TRY = 10000
 
 
 class FileGenerator:
@@ -163,7 +163,7 @@ class ProblemGenerator:
         server_dict: dict[int, Storage] = {}
         files: list[Object] = []
         files_dict: dict[int, Object] = {}
-        proposal_dict: dict[int, list[Proposal]] = {}
+        proposal_dict: dict[int, Proposal] = {}
         proposals: list[Proposal] = []
 
         # Generating servers
@@ -195,7 +195,7 @@ class ProblemGenerator:
                 # choose a random server
                 index = random.randint(1, len(available_servers)) - 1
                 server = available_servers.pop(index)
-                if server.get_resources_current() + file.get_resources_values() < server.get_resources_limits():
+                if server.get_resources_current().get_capacity() + file.get_resources_values().get_capacity() < server.get_resources_limits().get_capacity():
                     server.add_object_id(file.get_id())
                     server.set_resources_current(server.get_resources_current() + file.get_resources_values())
                     file.get_storages_ids().append(server.get_id())
@@ -223,7 +223,6 @@ class ProblemGenerator:
             try:
                 file_index = random.randint(0, len(available_files) - 1)
                 current_file = available_files[file_index]
-                current_id = current_file.get_id()
 
                 proposed_storages: list[int] = []
                 available_servers = copy.copy(servers)
@@ -233,12 +232,9 @@ class ProblemGenerator:
                         raise Exception('No enough server for the numbers and size of the files')
 
                     index = random.randint(0, len(available_servers) - 1)
-                    if available_servers[index].get_resources_current() + current_file.get_resources_values() < available_servers[index].get_resources_limits():
+                    if available_servers[index].get_resources_current().get_capacity() + current_file.get_resources_values().get_capacity() < available_servers[index].get_resources_limits().get_capacity():
                         proposed_storages.append(available_servers[index].get_id())
                     available_servers.pop(index)
-
-                if current_id not in proposal_dict:
-                    proposal_dict[current_id] = []
 
                 proposed_storages.sort()
 
@@ -250,11 +246,12 @@ class ProblemGenerator:
                 if len(functools.reduce(lambda acc, e: reduce_target(acc, e), proposals, [])) == 0 and current_file.get_storages_ids() != proposed_storages:  # type: ignore
                     # not already defined
                     proposal = Proposal(len(proposals), current_file, proposed_storages, ProposalType.MOVE, 0)
-                    proposal_dict[current_id].append(proposal)
+                    proposal_dict[proposal.get_id()] = proposal
                     proposals.append(proposal)
 
             except Exception:
-                available_files.pop(file_index)
+                if len(available_files) > 0:
+                    available_files.pop(file_index)
 
         server_count = functools.reduce(lambda acc, e: e[1] + acc, self.server_distribution, 0)
 
@@ -277,7 +274,7 @@ if __name__ == "__main__":
 
     file_generator = FileGenerator(file_max, file_min, file_average, 0.01)  # 10G * 0.0001 => smallest file is 10 Mb
 
-    generator = ProblemGenerator(20, 200, [tuple([get_ssd_server(), 1]), tuple([get_hdd_server(), 2])], file_generator)  # type: ignore
+    generator = ProblemGenerator(20, 200, [tuple([get_ssd_server(), 0]), tuple([get_hdd_server(), 3])], file_generator)  # type: ignore
     problem = generator.generate()
 
     store_problem("supa_smol", problem)

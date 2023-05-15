@@ -74,7 +74,7 @@ class ProblemInstance:
 
         self._volumes: dict[int, Volume] = volumes
         self._items: dict[int, Item] = items
-        self._proposals: dict[int, list[Proposal]] = basic_problem.get_proposals()
+        self._proposals: dict[int, Proposal] = basic_problem.get_proposals()
 
     def get_volumes(self) -> list[Volume]:
         return list(self._volumes.values())
@@ -83,7 +83,4 @@ class ProblemInstance:
         return list(self._items.values())
 
     def get_proposals(self) -> list[Proposal]:
-        proposals: list[Proposal] = []
-        for proposals_lists in list(self._proposals.values()):
-            proposals.extend(proposals_lists)
-        return proposals
+        return list(self._proposals.values())
