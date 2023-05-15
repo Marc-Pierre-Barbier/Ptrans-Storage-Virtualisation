@@ -3,7 +3,7 @@ from validator import check_problem
 
 
 def test_problem() -> ProposalsSolver:
-    solver = ProposalsSolver('fast_server_medium_usage')
+    solver = ProposalsSolver('supa_smol')
     # check if the stored problem is valid
     # if it's not valid it will throw an exception
     check_problem(solver.get_basic_problem())

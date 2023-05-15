@@ -292,21 +292,24 @@ class Problem:
 
         return presence_matrix
 
-    def log_visualization(self, tracked_objects: list[int], tracked_storages: list[int]) -> None:
-        with open('basic_visualization/' + dt.datetime.now().ctime().replace(':', '-') + '.txt', 'x') as file:
-            file.write(
-                'Number of OBJECTS : ' +
-                str(len(self._objects)) +
-                ' - Number of STORAGES: ' +
-                str(len(self._storages)) +
-                '\n---------------------\n' +
-                'Presence matrix indicating (object, storage) when object is in storage (using indexes)\n\n'
-            )
-            # file.write(np.array2string(self.get_presence_matrix(), max_line_width=99999999999999))
-            for tracked_object in tracked_objects:
-                file.write(Tracker(self, self.get_objects()[tracked_object], None, True).track())
-            for tracked_storage in tracked_storages:
-                file.write(Tracker(self, None, self.get_storages()[tracked_storage], True).track())
+    def log_visualization(self, tracked_objects: list[int], tracked_storages: list[int], tries=0) -> None:
+        try:
+            with open('basic_visualization/' + dt.datetime.now().ctime().replace(':', '-') + '-' + str(tries) + '.txt', 'x') as file:
+                file.write(
+                    'Number of OBJECTS : ' +
+                    str(len(self._objects)) +
+                    ' - Number of STORAGES: ' +
+                    str(len(self._storages)) +
+                    '\n---------------------\n' +
+                    'Presence matrix indicating (object, storage) when object is in storage (using indexes)\n\n'
+                )
+                # file.write(np.array2string(self.get_presence_matrix(), max_line_width=99999999999999))
+                for tracked_object in tracked_objects:
+                    file.write(Tracker(self, self.get_objects()[tracked_object], None, True).track())
+                for tracked_storage in tracked_storages:
+                    file.write(Tracker(self, None, self.get_storages()[tracked_storage], True).track())
+        except FileExistsError:
+            self.log_visualization(tracked_objects, tracked_storages, tries + 1)
 
 
 class Tracker:

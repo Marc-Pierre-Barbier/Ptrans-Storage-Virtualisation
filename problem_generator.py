@@ -13,6 +13,8 @@ MB = 1024 * KB
 GB = 1024 * MB
 TB = 1024 * GB
 
+MAX_TRY = 1000
+
 
 class FileGenerator:
     """The file Generator is a class that defines how files should be generated"""
@@ -47,11 +49,11 @@ class FileGenerator:
         delta = self.capacity_max - self.capacity_min
 
         return ResourceValues(
-            int(abs(np.random.normal(loc=self.average.get_capacity(), scale=self.spread * delta.get_capacity()))) + self.capacity_min.get_capacity(),
-            int(abs(np.random.normal(loc=self.average.get_read_bandwidth(), scale=self.spread * delta.get_read_bandwidth()))) + self.capacity_min.get_read_bandwidth(),
-            int(abs(np.random.normal(loc=self.average.get_read_ops(), scale=self.spread * delta.get_read_ops()))) + self.capacity_min.get_read_ops(),
-            int(abs(np.random.normal(loc=self.average.get_write_bandwidth(), scale=self.spread * delta.get_write_bandwidth()))) + self.capacity_min.get_write_bandwidth(),
-            int(abs(np.random.normal(loc=self.average.get_write_ops(), scale=self.spread * delta.get_write_ops()))) + self.capacity_min.get_write_ops()
+            int(abs(np.random.normal(loc=self.average.get_capacity(), scale=self.spread * delta.get_capacity()))),
+            int(abs(np.random.normal(loc=self.average.get_read_bandwidth(), scale=self.spread * delta.get_read_bandwidth()))),
+            int(abs(np.random.normal(loc=self.average.get_read_ops(), scale=self.spread * delta.get_read_ops()))),
+            int(abs(np.random.normal(loc=self.average.get_write_bandwidth(), scale=self.spread * delta.get_write_bandwidth()))),
+            int(abs(np.random.normal(loc=self.average.get_write_ops(), scale=self.spread * delta.get_write_ops())))
         )
 
 
@@ -91,11 +93,11 @@ class ServerGenerator:
         delta = self.capacity_max - self.capacity_min
 
         capacity = ResourceValues(
-            int(abs(np.random.normal(loc=self.average.get_capacity(), scale=self.capacity_spread * delta.get_capacity()))) + self.capacity_min.get_capacity(),
-            int(abs(np.random.normal(loc=self.average.get_read_bandwidth(), scale=self.capacity_spread * delta.get_read_bandwidth()))) + self.capacity_min.get_read_bandwidth(),
-            int(abs(np.random.normal(loc=self.average.get_read_ops(), scale=self.capacity_spread * delta.get_read_ops()))) + self.capacity_min.get_read_ops(),
-            int(abs(np.random.normal(loc=self.average.get_write_bandwidth(), scale=self.capacity_spread * delta.get_write_bandwidth()))) + self.capacity_min.get_write_bandwidth(),
-            int(abs(np.random.normal(loc=self.average.get_write_ops(), scale=self.capacity_spread * delta.get_write_ops()))) + self.capacity_min.get_write_ops()
+            int(abs(np.random.normal(loc=self.average.get_capacity(), scale=self.capacity_spread * delta.get_capacity()))),
+            int(abs(np.random.normal(loc=self.average.get_read_ops(), scale=self.capacity_spread * delta.get_read_ops()))),
+            int(abs(np.random.normal(loc=self.average.get_read_bandwidth(), scale=self.capacity_spread * delta.get_read_bandwidth()))),
+            int(abs(np.random.normal(loc=self.average.get_write_ops(), scale=self.capacity_spread * delta.get_write_ops()))),
+            int(abs(np.random.normal(loc=self.average.get_write_bandwidth(), scale=self.capacity_spread * delta.get_write_bandwidth())))
         )
 
         return capacity
@@ -106,7 +108,7 @@ class ServerGenerator:
 # it can be modified by using max *= (count)
 def get_ssd_server():
     # Benchmark of my Corsair MP400:
-    capacity = ResourceValues(
+    max = ResourceValues(
         4 * TB,
         90000,
         3 * GB,
@@ -122,11 +124,11 @@ def get_ssd_server():
         1 * GB,
     )
 
-    return ServerGenerator(capacity, capacity * 0.1, avg, 0.5)
+    return ServerGenerator(max, max * 0.3, avg, 0.5)
 
 
 def get_hdd_server():
-    capacity = ResourceValues(
+    max = ResourceValues(
         12 * TB,
         320,
         500 * MB,
@@ -134,13 +136,13 @@ def get_hdd_server():
         400 * MB,
     )
 
-    min = copy.copy(capacity)
+    min = copy.copy(max)
     min._capacity = min._capacity * 0.1
 
-    avg = copy.copy(capacity)
+    avg = copy.copy(max)
     avg._capacity = avg._capacity * 0.25
 
-    return ServerGenerator(capacity, min, avg, 0.5)
+    return ServerGenerator(max, min, avg, 0.5)
 
 
 class ProblemGenerator:
@@ -197,12 +199,26 @@ class ProblemGenerator:
                     server.add_object_id(file.get_id())
                     server.set_resources_current(server.get_resources_current() + file.get_resources_values())
                     file.get_storages_ids().append(server.get_id())
+                    file.get_storages_ids().sort()
 
         # Generating proposals
         # we select a random file an see if it can fit anywhere else, if it can we store the proposal and try again.
         # if it can't we remove the file from the vailable files
         available_files = copy.copy(files)
+        previous_proposals_len = 0
+        try_count = 0
         while len(proposals) < self.proposal_count:
+            if try_count == MAX_TRY:
+                print("Could not generate the requested amount of proposals, continuing")
+                break
+
+            if previous_proposals_len == len(proposals):
+                try_count += 1
+            else:
+                try_count = 0
+
+            previous_proposals_len = len(proposals)
+
             file_index = 0
             try:
                 file_index = random.randint(0, len(available_files) - 1)
@@ -224,9 +240,19 @@ class ProblemGenerator:
                 if current_id not in proposal_dict:
                     proposal_dict[current_id] = []
 
-                proposal = Proposal(len(proposals), current_file, proposed_storages, ProposalType.MOVE, 0)
-                proposal_dict[current_id].append(proposal)
-                proposals.append(proposal)
+                proposed_storages.sort()
+
+                def reduce_target(acc: list[Proposal], e: Proposal) -> list[Proposal]:
+                    if e.get_object_id() == current_file.get_id() and e.get_proposed_storages() == proposed_storages and e.get_proposal_type() == ProposalType.MOVE:
+                        acc.append(e)
+                    return acc
+
+                if len(functools.reduce(lambda acc, e: reduce_target(acc, e), proposals, [])) == 0 and current_file.get_storages_ids() != proposed_storages:  # type: ignore
+                    # not already defined
+                    proposal = Proposal(len(proposals), current_file, proposed_storages, ProposalType.MOVE, 0)
+                    proposal_dict[current_id].append(proposal)
+                    proposals.append(proposal)
+
             except Exception:
                 available_files.pop(file_index)
 
@@ -246,12 +272,12 @@ if __name__ == "__main__":
         5
     )
 
-    file_average = file_max * 0.0002  # 2 MB file average
-    file_min = file_max * 0.00001  # 102 KB file min
+    file_average = file_max  # 2 MB file average
+    file_min = file_max * 0.1  # 102 KB file min
 
     file_generator = FileGenerator(file_max, file_min, file_average, 0.01)  # 10G * 0.0001 => smallest file is 10 Mb
 
-    generator = ProblemGenerator(80000, 200000, [tuple([get_ssd_server(), 10]), tuple([get_hdd_server(), 1])], file_generator)  # type: ignore
+    generator = ProblemGenerator(20, 200, [tuple([get_ssd_server(), 1]), tuple([get_hdd_server(), 2])], file_generator)  # type: ignore
     problem = generator.generate()
 
-    store_problem("fast_server_medium_usage", problem)
+    store_problem("supa_smol", problem)
