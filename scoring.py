@@ -16,8 +16,8 @@ def max_entropy(eval: evaluation) -> int:
     return int(max([eval.entropy.get_capacity(), eval.entropy.get_read_bandwidth(), eval.entropy.get_read_ops(), eval.entropy.get_write_bandwidth(), eval.entropy.get_write_ops()]))
 
 
-def mean_abs_deviation(eval: evaluation) -> int:
-    return int(np.mean([eval.abs_deviation.get_capacity(), eval.abs_deviation.get_read_bandwidth(), eval.abs_deviation.get_read_ops(), eval.abs_deviation.get_write_bandwidth(), eval.abs_deviation.get_write_ops()]))
+def mean_abs_deviation(eval: evaluation) -> float:
+    return float(np.mean([eval.abs_deviation.get_capacity(), eval.abs_deviation.get_read_bandwidth(), eval.abs_deviation.get_read_ops(), eval.abs_deviation.get_write_bandwidth(), eval.abs_deviation.get_write_ops()]))
 
 
 def max_abs_deviation(eval: evaluation) -> int:

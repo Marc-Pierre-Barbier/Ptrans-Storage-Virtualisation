@@ -16,6 +16,7 @@ def absolute_deviation(list: list[float]) -> float:
 
 def entropy(data: list[float]) -> float:
     data = list(map(lambda a: round(a, 2), data))
+
     _, counts = np.unique(data, return_counts=True)
     probs = counts / len(data)
     n_classes = np.count_nonzero(probs)
@@ -26,7 +27,7 @@ def entropy(data: list[float]) -> float:
     ent = 0.
 
     for i in probs:
-        ent -= 100 * i * log(i, 2)
+        ent -= i * log(i, 10)
 
     return ent
 
@@ -146,12 +147,22 @@ def problem_stats(problem: Problem) -> dict[str, Stats]:
 class evaluation:
     entropy: ResourceValues
     abs_deviation: ResourceValues
-    stats: dict[str, Stats]
+    stats: dict[str, Stats] | None
 
-    def __init__(self, entropy: ResourceValues, abs_deviation: ResourceValues, stats: dict[str, Stats]) -> None:
+    def __init__(self, entropy: ResourceValues, abs_deviation: ResourceValues, stats: dict[str, Stats] | None) -> None:
         self.entropy = entropy
         self.abs_deviation = abs_deviation
         self.stats = stats
+
+    def __str__(self) -> str:
+        return f"Abs deviation lower is better: \n{self.abs_deviation}"
+
+    def __truediv__(self, other: 'evaluation') -> 'evaluation':
+        return evaluation(self.entropy / other.entropy, self.abs_deviation / other.abs_deviation, None)
+
+    def __mul__(self, other: int) -> 'evaluation':
+        return evaluation(self.entropy * 100, self.abs_deviation * 100, None)
+
 
 
 def evaluate(problem: Problem) -> evaluation:

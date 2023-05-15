@@ -129,7 +129,7 @@ class ProposalsSolver(Solver):
             )
 
         solver.Add(
-            sum([proposals_kept[proposal_id] for proposal_id in self.blowup_problem.proposals_ortools_ids]) >= 10
+            sum([proposals_kept[proposal_id] for proposal_id in self.blowup_problem.proposals_ortools_ids]) >= 20
         )
 
         solver.Add(
