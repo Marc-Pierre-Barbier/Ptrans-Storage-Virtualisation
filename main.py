@@ -28,4 +28,4 @@ if __name__ == "__main__":
     print("Change: initial / result")
     print((evaluation / inital_evla))
 
-    print(f"score: {-(mean_abs_deviation(evaluation) - mean_abs_deviation(inital_evla))}")
+    print(f"score: {(1 - mean_abs_deviation(evaluation / inital_evla)) * 100}%")

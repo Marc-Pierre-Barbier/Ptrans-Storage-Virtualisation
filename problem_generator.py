@@ -148,15 +148,17 @@ def get_hdd_server():
 class ProblemGenerator:
     file_count: int
     proposal_count: int
+    server_per_file: int
     # Generator : weight the weight define the probability of using this generator
     server_distribution: list[tuple[ServerGenerator, int]]
     file_generator: FileGenerator
 
-    def __init__(self, file_count: int, proposal_count: int, server_distribution: list[tuple[ServerGenerator | int]], file_generator: FileGenerator) -> None:
+    def __init__(self, file_count: int, proposal_count: int, server_distribution: list[tuple[ServerGenerator, int]], file_generator: FileGenerator, server_per_file: int = 2) -> None:
         self.file_count = file_count
-        self.server_distribution = server_distribution  # type: ignore
+        self.server_distribution = server_distribution
         self.file_generator = file_generator
         self.proposal_count = proposal_count
+        self.server_per_file = server_per_file
 
     def generate(self):
         servers: list[Storage] = []
@@ -188,7 +190,7 @@ class ProblemGenerator:
         for file in files:
             # servers for which we aren't bound yet and might be able to be bound
             available_servers = copy.copy(servers)
-            while len(file.get_storages_ids()) < 2:
+            while len(file.get_storages_ids()) < self.server_per_file:
                 if len(available_servers) == 0:
                     raise Exception('No enough server for the numbers and size of the files')
 
@@ -227,7 +229,7 @@ class ProblemGenerator:
                 proposed_storages: list[int] = []
                 available_servers = copy.copy(servers)
 
-                while len(proposed_storages) < 2:
+                while len(proposed_storages) < self.server_per_file:
                     if len(available_servers) == 0:
                         raise Exception('No enough server for the numbers and size of the files')
 
@@ -268,13 +270,8 @@ if __name__ == "__main__":
         10,
         5
     )
-
-    file_average = file_max  # 2 MB file average
-    file_min = file_max * 0.1  # 102 KB file min
-
-    file_generator = FileGenerator(file_max, file_min, file_average, 0.01)  # 10G * 0.0001 => smallest file is 10 Mb
-
-    generator = ProblemGenerator(20, 200, [tuple([get_ssd_server(), 0]), tuple([get_hdd_server(), 3])], file_generator)  # type: ignore
+    file_generator = FileGenerator(file_max, 0.01, 0.05, 0.5)
+    generator = ProblemGenerator(20, 200, [(get_hdd_server(), 3)], file_generator)
     problem = generator.generate()
 
-    store_problem("supa_smol", problem)
+    store_problem("demo_example", problem)

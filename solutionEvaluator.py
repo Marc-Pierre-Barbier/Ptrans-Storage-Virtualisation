@@ -164,7 +164,6 @@ class evaluation:
         return evaluation(self.entropy * 100, self.abs_deviation * 100, None)
 
 
-
 def evaluate(problem: Problem) -> evaluation:
     entropy_result = problem_agregator(problem, entropy)
     deviation_result = problem_agregator(problem, absolute_deviation)
