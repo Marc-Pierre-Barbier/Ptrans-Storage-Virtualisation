@@ -4,6 +4,7 @@ from typing import Callable
 import numpy as np
 from modelizations.basic_modelization import Problem, ResourceValues, Storage
 from modelizations.parser import parse_problem
+from validator import check_problem
 
 
 def absolute_deviation(list: list[float]) -> float:
@@ -194,9 +195,17 @@ def batch_evaluate(solver: Callable[[Problem], Problem], monoscore: Callable[[Ev
     """
     evals: dict[str, tuple[Evaluation, Evaluation, float]] = {}
 
+    # validate all problem files before running.
     for file in os.scandir("data_sample"):
         if file.name.endswith("txt"):
             prob: Problem = parse_problem(file.path)
+            check_problem(prob)
+
+    # run all tests
+    for file in os.scandir("data_sample"):
+        if file.name.endswith("txt"):
+            print("evaluating: " + file.name)
+            prob = parse_problem(file.path)
             evaluation_before = evaluate(prob)
             evaluation_after = evaluate(solver(prob))
             score = monoscore(evaluation_before, evaluation_after)

@@ -1,3 +1,4 @@
+from ortools.linear_solver.linear_solver_natural_api import LinearExpr
 from modelizations.abstract_modelization import ProblemInstance
 from modelizations.basic_modelization import Problem
 from solvers.solver import Solver
@@ -86,7 +87,7 @@ class ProposalsSolver(Solver):
     def __init__(self, problem: str | Problem):
         super().__init__(problem)
 
-    def solve(self) -> Problem:
+    def solve(self, limit_proposals: bool = False) -> Problem:
         self.blownup_problem = BlownupProblem(self.get_problem())
         # the type of the solver should have a significant impact but we don't know what because or-tools has no documentation explaining this
         solver = pywraplp.Solver.CreateSolver('SCIP')
@@ -103,19 +104,6 @@ class ProposalsSolver(Solver):
             for volume_id in self.blownup_problem.volumes_ids:
                 affectations[item_id, volume_id] = solver.IntVar(0, 1, f'affectations_{item_id}_{volume_id}')
 
-        volume_value: dict[tuple[int, int], pywraplp.Variable] = {}
-        for volume_id in self.blownup_problem.volumes_ids:
-            for i in range(5):
-                volume_value[volume_id, i] = solver.NumVar(-solver.infinity(), solver.infinity(), f'volume_value_{volume_id}_{i}')
-
-        '''for item_id in self.blownup_problem.items_ids:
-            for volume_id in self.blownup_problem.volumes_ids:
-                solver.Add(
-                    sum(
-                        [proposals_kept[proposal_id] for proposal_id in self.blownup_problem.proposals_ids if (self.blownup_problem.proposals_item_concerned[proposal_id] == item_id and volume_id in self.blownup_problem.proposals_volumes_destination[proposal_id])]
-                    ) <= 1
-                )'''
-
         # Establishing the link between affectations and proposals. Very particular in its approach and very difficult to perform better.
         for proposal_id in self.blownup_problem.proposals_ids:
             item_id = self.blownup_problem.proposals_item_concerned[proposal_id]
@@ -129,78 +117,50 @@ class ProposalsSolver(Solver):
                     solver.Add(affectations[item_id, volume_id] - proposals_kept[proposal_id] >= 0, "Link between affectations and proposals 2")
 
         for item_id in self.blownup_problem.items_ids:
+            if item_id not in self.blownup_problem.proposals_for_item:
+                continue
+
             solver.Add(sum([proposals_kept[proposal_id] for proposal_id in self.blownup_problem.proposals_for_item[item_id]]) <= 1)
 
             for volume_id in self.blownup_problem.original_affectations[item_id]:
                 if (item_id, volume_id) not in self.blownup_problem.proposals_for_item_volume:
                     solver.Add(affectations[item_id, volume_id] == 1)
                 else:
-                    solver.Add(sum([proposals_kept[proposal_id] for proposal_id in self.blownup_problem.proposals_for_item_volume[item_id, volume_id] if volume_id not in self.blownup_problem.proposals_volumes_destination[proposal_id]]) + affectations[item_id, volume_id] >= 1)
+                    solver.Add(sum([proposals_kept[proposal_id] for proposal_id in self.blownup_problem.proposals_for_item_volume[item_id, volume_id] if volume_id not in self.blownup_problem.proposals_volumes_destination[proposal_id]]) + affectations[item_id, volume_id] == 1)
                     # -affection + sum instead of the oposite since unary - is define but int - var isn't (var - int is)
                     # this doesn't affect functionnality as both work but it fixes the typing error
                     solver.Add(-affectations[item_id, volume_id] + sum([proposals_kept[proposal_id] for proposal_id in self.blownup_problem.proposals_for_item_volume[item_id, volume_id] if volume_id in self.blownup_problem.proposals_volumes_destination[proposal_id]]) <= 0)
-
-        '''Other trials for establishing links between proposals and affectations, unfortunately not working on big instances for a unknown reason
-
-        for item_id in self.blownup_problem.items_ids:
-            for volume_id in self.blownup_problem.volumes_ids:
-
-                has_volume = volume_id in self.blownup_problem.original_affectations[item_id]
-
-                if has_volume:
-                    interesting_original_proposals: list[int] = [proposal_id for proposal_id in self.blownup_problem.proposals_ids if (self.blownup_problem.proposals_item_concerned[proposal_id] == item_id and volume_id in self.blownup_problem.proposals_volumes_origin[proposal_id])]
-                    for proposal_id in interesting_original_proposals:
-                        solver.Add(affectations[item_id, volume_id] - proposals_kept[proposal_id] >= 0, "Link between affectations and proposals 1")
-                else:
-                    interesting_destination_proposals: list[int] = [proposal_id for proposal_id in self.blownup_problem.proposals_ids if (self.blownup_problem.proposals_item_concerned[proposal_id] == item_id and volume_id in self.blownup_problem.proposals_volumes_destination[proposal_id])]
-                    for proposal_id in interesting_destination_proposals:
-                        solver.Add(affectations[item_id, volume_id] + proposals_kept[proposal_id] <= 1, "Link between affectations and proposals 2")
-
-                original_proposal_count = sum(
-                    [proposals_kept[proposal_id] for proposal_id in self.blownup_problem.proposals_ids if (self.blownup_problem.proposals_item_concerned[proposal_id] == item_id and volume_id in self.blownup_problem.proposals_volumes_origin[proposal_id])]
-                ) == 0
-
-                proposal_count = sum(
-                    [proposals_kept[proposal_id] for proposal_id in self.blownup_problem.proposals_ids if (self.blownup_problem.proposals_item_concerned[proposal_id] == item_id and volume_id in self.blownup_problem.proposals_volumes_destination[proposal_id])]
-                ) >= 1
-
-                var = (
-                        (
-                            has_volume and original_proposal_count
-                        ) or (
-                            (not has_volume) and proposal_count
-                        )
-                )'''
-
-        # no more than one affectation of an item to a volume
-        for item_id in self.blownup_problem.items_ids:
-            solver.Add(sum([affectations[item_id, volume_id] for volume_id in self.blownup_problem.volumes_ids]) >= 1)
-
-        '''for volume_id in self.blownup_problem.volumes_ids:
-            solver.Add(sum([affectations[item_id, volume_id] for item_id in self.blownup_problem.items_ids]) <= 1)'''
 
         # capacity limit -> hard constraint
         for volume_id in self.blownup_problem.volumes_ids:
             solver.Add(sum([affectations[item_id, volume_id] * self.blownup_problem.items_weight0[item_id] for item_id in self.blownup_problem.items_ids]) <= self.blownup_problem.volumes_capacity0[volume_id])
 
+        volume_value: dict[tuple[int, int], LinearExpr] = {}
         for volume_id in self.blownup_problem.volumes_ids:
-            solver.Add(volume_value[volume_id, 0] == (sum([affectations[item_id, volume_id] * self.blownup_problem.items_weight0[item_id] for item_id in self.blownup_problem.items_ids]) / self.blownup_problem.volumes_capacity0[volume_id]))
-            solver.Add(volume_value[volume_id, 1] == (sum([affectations[item_id, volume_id] * self.blownup_problem.items_weight1[item_id] for item_id in self.blownup_problem.items_ids]) / self.blownup_problem.volumes_capacity1[volume_id]))
-            solver.Add(volume_value[volume_id, 2] == (sum([affectations[item_id, volume_id] * self.blownup_problem.items_weight2[item_id] for item_id in self.blownup_problem.items_ids]) / self.blownup_problem.volumes_capacity2[volume_id]))
-            solver.Add(volume_value[volume_id, 3] == (sum([affectations[item_id, volume_id] * self.blownup_problem.items_weight3[item_id] for item_id in self.blownup_problem.items_ids]) / self.blownup_problem.volumes_capacity3[volume_id]))
-            solver.Add(volume_value[volume_id, 4] == (sum([affectations[item_id, volume_id] * self.blownup_problem.items_weight4[item_id] for item_id in self.blownup_problem.items_ids]) / self.blownup_problem.volumes_capacity4[volume_id]))
+            volume_value[volume_id, 0] = (sum([affectations[item_id, volume_id] * self.blownup_problem.items_weight0[item_id] for item_id in self.blownup_problem.items_ids]) / self.blownup_problem.volumes_capacity0[volume_id])  # type: ignore
+            volume_value[volume_id, 1] = (sum([affectations[item_id, volume_id] * self.blownup_problem.items_weight1[item_id] for item_id in self.blownup_problem.items_ids]) / self.blownup_problem.volumes_capacity1[volume_id])  # type: ignore
+            volume_value[volume_id, 2] = (sum([affectations[item_id, volume_id] * self.blownup_problem.items_weight2[item_id] for item_id in self.blownup_problem.items_ids]) / self.blownup_problem.volumes_capacity2[volume_id])  # type: ignore
+            volume_value[volume_id, 3] = (sum([affectations[item_id, volume_id] * self.blownup_problem.items_weight3[item_id] for item_id in self.blownup_problem.items_ids]) / self.blownup_problem.volumes_capacity3[volume_id])  # type: ignore
+            volume_value[volume_id, 4] = (sum([affectations[item_id, volume_id] * self.blownup_problem.items_weight4[item_id] for item_id in self.blownup_problem.items_ids]) / self.blownup_problem.volumes_capacity4[volume_id])  # type: ignore
 
         comparison_score: dict[tuple[int, int, int], pywraplp.Variable] = {}
         for volume_id_a in self.blownup_problem.volumes_ids:
             for volume_id_b in self.blownup_problem.volumes_ids:
                 for i in range(5):
-                    comparison_score[volume_id_a, volume_id_b, i] = solver.NumVar(-solver.infinity(), solver.infinity(), f'comparison_score[{volume_id_a}, {volume_id_b}_{i}]')
+                    comparison_score[volume_id_a, volume_id_b, i] = solver.NumVar(0, solver.infinity(), f'comparison_score[{volume_id_a}, {volume_id_b}_{i}]')
 
         for volume_id_a in self.blownup_problem.volumes_ids:
             for volume_id_b in self.blownup_problem.volumes_ids:
                 for i in range(5):
                     solver.Add(comparison_score[volume_id_a, volume_id_b, i] >= volume_value[volume_id_a, i] - volume_value[volume_id_b, i])
                     solver.Add(comparison_score[volume_id_b, volume_id_a, i] >= volume_value[volume_id_a, i] - volume_value[volume_id_b, i])
+
+        if limit_proposals:
+            max_proposal = min((len(self.blownup_problem.proposals_ids) / len(self.blownup_problem.volumes_ids)) * 0.6, len(self.blownup_problem.proposals_ids) * 0.10)
+            solver.Add(
+                sum([proposals_kept[proposal_id] for proposal_id in self.blownup_problem.proposals_ids]) <= min((len(self.blownup_problem.proposals_ids) / len(self.blownup_problem.volumes_ids)) * 0.6, len(self.blownup_problem.proposals_ids) * 0.10)
+            )
+            print("only keeping:" + str(max_proposal))
 
         # declaring the objective function
         objective = solver.Objective()
@@ -209,11 +169,6 @@ class ProposalsSolver(Solver):
 
         for proposal_id in self.blownup_problem.proposals_ids:
             objective.SetCoefficient(proposals_kept[proposal_id], proposal_weight)
-
-        '''for volume_id in self.blownup_problem.volumes_ids:
-            for item_id in self.blownup_problem.items_ids:
-                objective.SetCoefficient(affectations[item_id, volume_id],
-                                         (self.blownup_problem.items_weight1[item_id] / self.blownup_problem.volumes_capacity1[volume_id]))'''
 
         for volume_id_a in self.blownup_problem.volumes_ids:
             for volume_id_b in self.blownup_problem.volumes_ids:
@@ -225,14 +180,10 @@ class ProposalsSolver(Solver):
         print('Solver launched')
         a = time()
 
-        status = solver.Solve()
+        solver.Solve()
 
         b = time()
         print(f"time: {b - a}s")
-
-        if status != pywraplp.Solver.OPTIMAL:
-            print('aie aie aie')
-            # return "Error : the problem cannot be solved."
 
         problem_proposals_kept: list[int] = []
 

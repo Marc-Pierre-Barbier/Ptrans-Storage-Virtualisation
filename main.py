@@ -2,22 +2,12 @@ from modelizations.basic_modelization import Problem
 from scoring import change_abs_deviation
 from solutionEvaluator import batch_evaluate
 from solvers.proposals_solver import ProposalsSolver
-from validator import check_problem
-
-
-def test_problem() -> ProposalsSolver:
-    solver = ProposalsSolver('basic_pc')
-    # check if the stored problem is valid
-    # if it's not valid it will throw an exception
-    check_problem(solver.get_basic_problem())
-
-    return solver
 
 
 if __name__ == "__main__":
     def evaluate(problem: Problem) -> Problem:
         solver = ProposalsSolver(problem)
-        return solver.solve()
+        return solver.solve(True)
 
     results = batch_evaluate(evaluate, change_abs_deviation)
 

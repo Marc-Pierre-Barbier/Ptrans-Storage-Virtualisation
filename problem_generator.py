@@ -13,7 +13,7 @@ MB = 1024 * KB
 GB = 1024 * MB
 TB = 1024 * GB
 
-MAX_TRY = 10000
+MAX_TRY = 1000000
 
 
 class FileGenerator:
@@ -268,10 +268,10 @@ if __name__ == "__main__":
         100,
         10,
         10,
-        5
-    )
+        50
+    ) * 0.5
     file_generator = FileGenerator(file_max, 0.01, 0.05, 0.5)
-    generator = ProblemGenerator(20, 200, [(get_hdd_server(), 3)], file_generator)
+    generator = ProblemGenerator(1000, 40000, [(get_ssd_server(), 1), (get_hdd_server(), 2)], file_generator)
     problem = generator.generate()
 
-    store_problem("demo_example", problem)
+    store_problem("1k_items_3s", problem)
