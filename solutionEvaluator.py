@@ -145,7 +145,7 @@ def problem_stats(problem: Problem) -> dict[str, Stats]:
     return results
 
 
-class evaluation:
+class Evaluation:
     entropy: ResourceValues
     abs_deviation: ResourceValues
     stats: dict[str, Stats] | None
@@ -158,33 +158,34 @@ class evaluation:
     def __str__(self) -> str:
         return f"Abs deviation lower is better: \n{self.abs_deviation}"
 
-    def __truediv__(self, other: 'evaluation') -> 'evaluation':
-        return evaluation(self.entropy / other.entropy, self.abs_deviation / other.abs_deviation, None)
+    def __truediv__(self, other: 'Evaluation') -> 'Evaluation':
+        return Evaluation(self.entropy / other.entropy, self.abs_deviation / other.abs_deviation, None)
 
-    def __mul__(self, other: int) -> 'evaluation':
-        return evaluation(self.entropy * 100, self.abs_deviation * 100, None)
+    def __mul__(self, other: int) -> 'Evaluation':
+        return Evaluation(self.entropy * 100, self.abs_deviation * 100, None)
 
 
-def evaluate(problem: Problem) -> evaluation:
+def evaluate(problem: Problem) -> Evaluation:
     entropy_result = problem_agregator(problem, entropy)
     deviation_result = problem_agregator(problem, absolute_deviation)
     stats = problem_stats(problem)
 
-    return evaluation(entropy_result, deviation_result, stats)
+    return Evaluation(entropy_result, deviation_result, stats)
 
 
 # to use this function you need to provide a scoring function, look in scoring.py
-def batch_evaluate(solver: Callable[[Problem], Problem], monoscore: Callable[[evaluation], int], print_score: bool = True):
-    evals: list[evaluation] = []
+def batch_evaluate(solver: Callable[[Problem], Problem], monoscore: Callable[[Evaluation], int], print_score: bool = True):
+    evals: dict[str, tuple[Evaluation, int]] = {}
 
     for file in os.scandir("data_sample"):
         if file.name.endswith("txt"):
             prob: Problem = parse_problem(file.path)
-            evals.append(evaluate(solver(prob)))
+            evaluation = evaluate(solver(prob))
+            score = monoscore(evaluation)
+            evals[file.name] = (evaluation, score)
 
-    if print_score:
-        for eval in evals:
-            print(monoscore(eval))
+            if print_score:
+                print(score)
 
     # return for automations
-    return monoscore
+    return evals
