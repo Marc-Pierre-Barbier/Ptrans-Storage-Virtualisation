@@ -91,12 +91,13 @@ class ResourceValues:
         )
 
     def __truediv__(self, other: 'ResourceValues'):
+        # avoid division by 0
         return ResourceValues(
-            self._capacity / other._capacity,
-            self._read_ops / other._read_ops,
-            self._read_bandwidth / other._read_bandwidth,
-            self._write_ops / other._write_ops,
-            self._write_bandwidth / other._write_bandwidth
+            self._capacity / max(other._capacity, 0.000001),
+            self._read_ops / max(other._read_ops, 0.000001),
+            self._read_bandwidth / max(other._read_bandwidth, 0.000001),
+            self._write_ops / max(other._write_ops, 0.000001),
+            self._write_bandwidth / max(other._write_bandwidth, 0.000001)
         )
 
     def __gt__(self, other: 'object | ResourceValues') -> bool:
