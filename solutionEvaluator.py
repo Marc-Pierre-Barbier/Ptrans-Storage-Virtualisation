@@ -15,6 +15,7 @@ def absolute_deviation(list: list[float]) -> float:
 
 
 def entropy(data: list[float]) -> float:
+    # rounding to a limited number of decimal places is essencial to determine the density
     data = list(map(lambda a: round(a, 2), data))
 
     _, counts = np.unique(data, return_counts=True)
@@ -27,7 +28,7 @@ def entropy(data: list[float]) -> float:
     ent = 0.
 
     for i in probs:
-        ent -= i * log(i, 10)
+        ent -= i * log(i, 2)
 
     return ent
 
