@@ -5,7 +5,7 @@ from validator import check_problem
 
 
 def test_problem() -> ProposalsSolver:
-    solver = ProposalsSolver('super_small')
+    solver = ProposalsSolver('basic_pc')
     # check if the stored problem is valid
     # if it's not valid it will throw an exception
     check_problem(solver.get_basic_problem())
@@ -28,4 +28,4 @@ if __name__ == "__main__":
     print("Change: initial / result")
     print((evaluation / inital_evla))
 
-    print(f"score: {(1 - mean_abs_deviation(evaluation / inital_evla)) * 100}%")
+    print(f"score: {(1 - mean_abs_deviation(None, evaluation / inital_evla)) * 100}%")
