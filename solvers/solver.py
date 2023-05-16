@@ -5,9 +5,14 @@ from modelizations.parser import parse_problem
 
 class Solver:
     """A class implementing a solver to choose dynamically a method to solve the problem."""
+    _basic_problem: Problem
 
-    def __init__(self, path: str):
-        self._basic_problem: Problem = parse_problem(path)
+    def __init__(self, problem: str | Problem):
+        if isinstance(problem, str):
+            self._basic_problem = parse_problem('data_sample' + problem + '.txt')
+        else:
+            self._basic_problem = problem
+
         self._basic_problem.log_visualization([0, 1, 2], [0, 1, 2])
         self._problem: ProblemInstance = ProblemInstance(self._basic_problem)
         self._proposals_kept: list[int] = []

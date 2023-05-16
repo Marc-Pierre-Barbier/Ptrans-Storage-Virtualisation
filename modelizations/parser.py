@@ -9,7 +9,7 @@ STORAGE_MODE = "=== Storages ==="
 
 
 def parse_problem(path: str) -> Problem:
-    with open('data_sample/' + path + ".txt", 'r') as file:
+    with open(path, 'r') as file:
         empty_ressource = ResourceValues(0, 0, 0, 0, 0)
         storages: dict[int, Storage] = {}
         objects: dict[int, Object] = {}

@@ -45,8 +45,8 @@ class BlowupProblem:
 
 
 class ProposalsSolver(Solver):
-    def __init__(self, path: str):
-        super().__init__(path)
+    def __init__(self, problem: str | Problem):
+        super().__init__(problem)
 
     def solve(self) -> Problem:
         self.blowup_problem = BlowupProblem(self.get_problem())
