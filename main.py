@@ -5,7 +5,7 @@ from validator import check_problem
 
 
 def test_problem() -> ProposalsSolver:
-    solver = ProposalsSolver('supa_smol')
+    solver = ProposalsSolver('super_small')
     # check if the stored problem is valid
     # if it's not valid it will throw an exception
     check_problem(solver.get_basic_problem())

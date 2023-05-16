@@ -160,7 +160,7 @@ class ProposalsSolver(Solver):
         status = solver.Solve()
 
         b = time()
-        print(f"time: {b - a}")
+        print(f"time: {b - a}s")
 
         if status != pywraplp.Solver.OPTIMAL:
             print('aie aie aie')
