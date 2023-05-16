@@ -174,15 +174,33 @@ def evaluate(problem: Problem) -> Evaluation:
 
 
 # to use this function you need to provide a scoring function, look in scoring.py
-def batch_evaluate(solver: Callable[[Problem], Problem], monoscore: Callable[[Evaluation], int], print_score: bool = True):
-    evals: dict[str, tuple[Evaluation, int]] = {}
+def batch_evaluate(solver: Callable[[Problem], Problem], monoscore: Callable[[Evaluation, Evaluation], float] = (lambda _, __: 0), print_score: bool = True) -> dict[str, tuple[Evaluation, Evaluation, float]]:
+    """Evaluate a solver using problems in the data_sample directory
+
+    Parameters
+    ----------
+    solver : Callable[[Problem], Problem]
+        the solver to call
+    monoscore : Callable[[Evaluation, Evaluation], float], optional
+        function used to generate the score
+    print_score : bool, optional
+        use print() to display the score when computed
+
+    Returns
+    -------
+    dict[str, tuple[Evaluation, Evaluation, float]]
+        the key of the dict is the name of the file in data_sample,
+        the tuple containse in order the evaluation before the solver, then the evaluation after and finally the score
+    """
+    evals: dict[str, tuple[Evaluation, Evaluation, float]] = {}
 
     for file in os.scandir("data_sample"):
         if file.name.endswith("txt"):
             prob: Problem = parse_problem(file.path)
-            evaluation = evaluate(solver(prob))
-            score = monoscore(evaluation)
-            evals[file.name] = (evaluation, score)
+            evaluation_before = evaluate(prob)
+            evaluation_after = evaluate(solver(prob))
+            score = monoscore(evaluation_before, evaluation_after)
+            evals[file.name] = (evaluation_before, evaluation_after, score)
 
             if print_score:
                 print(score)

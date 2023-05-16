@@ -5,20 +5,24 @@ these are made to be used with the batch evaluator in solutionEvaluator
 """
 
 import numpy as np
-from solutionEvaluator import evaluation
+from solutionEvaluator import Evaluation
 
 
-def mean_entropy(eval: evaluation) -> int:
-    return int(np.mean([eval.entropy.get_capacity(), eval.entropy.get_read_bandwidth(), eval.entropy.get_read_ops(), eval.entropy.get_write_bandwidth(), eval.entropy.get_write_ops()]))
+def mean_entropy(_, new_eval: Evaluation) -> float:
+    return int(np.mean([new_eval.entropy.get_capacity(), new_eval.entropy.get_read_bandwidth(), new_eval.entropy.get_read_ops(), new_eval.entropy.get_write_bandwidth(), new_eval.entropy.get_write_ops()]))
 
 
-def max_entropy(eval: evaluation) -> int:
-    return int(max([eval.entropy.get_capacity(), eval.entropy.get_read_bandwidth(), eval.entropy.get_read_ops(), eval.entropy.get_write_bandwidth(), eval.entropy.get_write_ops()]))
+def max_entropy(_, new_eval: Evaluation) -> float:
+    return int(max([new_eval.entropy.get_capacity(), new_eval.entropy.get_read_bandwidth(), new_eval.entropy.get_read_ops(), new_eval.entropy.get_write_bandwidth(), new_eval.entropy.get_write_ops()]))
 
 
-def mean_abs_deviation(eval: evaluation) -> float:
-    return float(np.mean([eval.abs_deviation.get_capacity(), eval.abs_deviation.get_read_bandwidth(), eval.abs_deviation.get_read_ops(), eval.abs_deviation.get_write_bandwidth(), eval.abs_deviation.get_write_ops()]))
+def mean_abs_deviation(_, new_eval: Evaluation) -> float:
+    return float(np.mean([new_eval.abs_deviation.get_capacity(), new_eval.abs_deviation.get_read_bandwidth(), new_eval.abs_deviation.get_read_ops(), new_eval.abs_deviation.get_write_bandwidth(), new_eval.abs_deviation.get_write_ops()]))
 
 
-def max_abs_deviation(eval: evaluation) -> int:
-    return int(max([eval.abs_deviation.get_capacity(), eval.abs_deviation.get_read_bandwidth(), eval.abs_deviation.get_read_ops(), eval.abs_deviation.get_write_bandwidth(), eval.abs_deviation.get_write_ops()]))
+def max_abs_deviation(_, new_eval: Evaluation) -> float:
+    return int(max([new_eval.abs_deviation.get_capacity(), new_eval.abs_deviation.get_read_bandwidth(), new_eval.abs_deviation.get_read_ops(), new_eval.abs_deviation.get_write_bandwidth(), new_eval.abs_deviation.get_write_ops()]))
+
+
+def change_abs_deviation(old_eval: Evaluation, new_eval: Evaluation) -> float:
+    return (1 - mean_abs_deviation(None, new_eval / old_eval)) * 100
